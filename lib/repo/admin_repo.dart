@@ -7,10 +7,38 @@ class AdminRepository {
   String restaurantId;
   late int numOfTables;
   late Map<dynamic, dynamic> allCurrentOrders = {};
+  late Map<int, Stream<dynamic>> allStreamOrders = {};
   late final _docRef =
       FirebaseFirestore.instance.collection('Main').doc(restaurantId);
-  Future<void> printDoc() async {
-    _docRef.get().then((value) => print(value['tableCount']));
+
+  Future<int> getNumberOfTables() async {
+    return _docRef.get().then((value) => (value['tableCount']) as int);
+  }
+
+  Future<int> getRobotCount() async {
+    return _docRef.get().then((value) => (value['robotCount']) as int);
+  }
+
+  Map<int, Stream<dynamic>> getDocumentSnapshot() {
+    numOfTables = 6;
+    for (var table = 1; table < numOfTables + 1; table++) {
+      allStreamOrders[table] = _docRef
+          .collection('table' + table.toString())
+          .where('closed', isEqualTo: false)
+          .limit(1)
+          .snapshots();
+    }
+    return allStreamOrders;
+  }
+
+  Stream<OrderModel> getEachTables(int table) {
+    return _docRef
+        .collection('table' + table.toString())
+        .where('closed', isEqualTo: false)
+        .limit(1)
+        .snapshots()
+        .map((event) =>
+            event.docs.map((e) => (OrderModel.fromJson(e.data()))).first);
   }
 
   Future<Map<dynamic, dynamic>> getAllCurrentOrders() async {
