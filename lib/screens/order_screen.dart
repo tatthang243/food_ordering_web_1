@@ -51,14 +51,20 @@ class OrderScreenState extends State<OrderScreen> {
         builder: (context, AsyncSnapshot<String> snapshot) {
           if (snapshot.hasData) {
             return Scaffold(
+                backgroundColor: Colors.grey[200],
                 floatingActionButton: FloatingActionButton(
+                  backgroundColor: Colors.black,
                   child: Icon(Icons.shopping_cart_outlined),
                   onPressed: () {
                     QR.toName(AppRoutes.cartPage);
                   },
                 ),
                 appBar: AppBar(
-                  title: Text("The Menu"),
+                  title: Text(
+                    "The Menu",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  backgroundColor: Colors.black,
                   automaticallyImplyLeading: false,
                   centerTitle: true,
                 ),
@@ -165,10 +171,10 @@ class _FoodItemState extends State<FoodItem> {
                       ),
                       Text('Giá: ' + widget.foodItem['price'].toString(),
                           style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.red,
-                              fontStyle: FontStyle.italic))
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ))
                     ],
                   ),
                   SizedBox(

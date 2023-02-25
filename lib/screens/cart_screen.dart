@@ -5,8 +5,11 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_session/flutter_session.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:food_ordering_web_1/bloc/cart/cart_bloc.dart';
+import 'package:food_ordering_web_1/model/order_model.dart';
+import 'package:food_ordering_web_1/repo/order_repo.dart';
 import 'package:food_ordering_web_1/utils/food_map.dart';
 import 'package:food_ordering_web_1/utils/paths.dart';
+import 'package:provider/provider.dart';
 import 'package:qlevar_router/qlevar_router.dart';
 
 class CartScreen extends StatefulWidget {
@@ -47,19 +50,18 @@ class _CartScreenState extends State<CartScreen> {
         future: _loadSession(),
         builder: (context, AsyncSnapshot<String> snapshot) {
           if (snapshot.hasData) {
-            return BlocBuilder<CartBloc, CartState>(
-                bloc: CartBloc(
-                    isLogin: isLogin,
-                    table: table,
-                    restaurantId: restaurantId,
-                    id: id)
-                  ..add(CartCreation()),
-                builder: (context, state) {
-                  if (state is CartLoading) {
-                    return CircularProgressIndicator();
-                  } else if (state is CartSuccess) {
-                    // print(state.orders.items[1].meal);
-                    for (var order in state.orders.items) {
+            return StreamProvider<OrderModel>.value(
+                value: OrderRepository(
+                        isLogin: isLogin,
+                        table: table,
+                        restaurantId: restaurantId,
+                        id: id)
+                    .getStreamFromFirebase(),
+                initialData: OrderModel(true, []),
+                child: Builder(
+                  builder: (context) {
+                    var orders = Provider.of<OrderModel>(context);
+                    for (var order in orders.items) {
                       var results = map.where(
                           (element) => element.containsValue(order.meal));
                       for (var result in results) {
@@ -81,7 +83,7 @@ class _CartScreenState extends State<CartScreen> {
                               QR.toName(AppRoutes.menuPage);
                             },
                           )),
-                      body: state.orders.closed
+                      body: orders.closed || currentOrders.length == 0
                           ? Container(
                               alignment: Alignment.topCenter,
                               padding: EdgeInsets.only(top: 10),
@@ -98,14 +100,67 @@ class _CartScreenState extends State<CartScreen> {
                                       foodItem: currentOrders[index]))),
                             ),
                     );
-                  } else if (state is CartFail) {
-                    return Container(
-                      child: Text(state.message),
-                    );
-                  } else {
-                    return SizedBox();
-                  }
-                });
+                  },
+                ));
+            // return BlocBuilder<CartBloc, CartState>(
+            //     bloc: CartBloc(
+            //         isLogin: isLogin,
+            //         table: table,
+            //         restaurantId: restaurantId,
+            //         id: id)
+            //       ..add(CartCreation()),
+            //     builder: (context, state) {
+            //       if (state is CartLoading) {
+            //         return CircularProgressIndicator();
+            //       } else if (state is CartSuccess) {
+            //         // print(state.orders.items[1].meal);
+            //         for (var order in state.orders.items) {
+            //           var results = map.where(
+            //               (element) => element.containsValue(order.meal));
+            //           for (var result in results) {
+            //             result['amount'] = order.amount;
+            //             result['status'] = order.status;
+            //             result['time'] = order.time;
+            //             result['price'] = order.price;
+            //           }
+            //           currentOrders = [...currentOrders, ...results];
+            //         }
+            //         return Scaffold(
+            //           appBar: AppBar(
+            //               automaticallyImplyLeading: false,
+            //               centerTitle: true,
+            //               title: Text("Your Cart"),
+            //               leading: IconButton(
+            //                 icon: Icon(Icons.arrow_back),
+            //                 onPressed: () {
+            //                   QR.toName(AppRoutes.menuPage);
+            //                 },
+            //               )),
+            //           body: state.orders.closed
+            //               ? Container(
+            //                   alignment: Alignment.topCenter,
+            //                   padding: EdgeInsets.only(top: 10),
+            //                   child: Text(
+            //                     "Your cart is empty",
+            //                     style: TextStyle(fontStyle: FontStyle.italic),
+            //                   ),
+            //                 )
+            //               : ListView.builder(
+            //                   scrollDirection: Axis.vertical,
+            //                   itemCount: currentOrders.length,
+            //                   itemBuilder: ((context, index) => Card(
+            //                       child: OrderItem(
+            //                           foodItem: currentOrders[index]))),
+            //                 ),
+            //         );
+            //       } else if (state is CartFail) {
+            //         return Container(
+            //           child: Text(state.message),
+            //         );
+            //       } else {
+            //         return SizedBox();
+            //       }
+            //     });
           } else {
             return CircularProgressIndicator();
           }

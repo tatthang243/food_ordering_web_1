@@ -115,14 +115,14 @@ class _OrderDialogState extends State<OrderDialog> {
                         }),
                         child: Text("Order"),
                         style: ElevatedButton.styleFrom(
-                          primary: Colors.green,
+                          backgroundColor: Colors.black,
                           // side: BorderSide(color: Colors.yellow, width: 5),
                           textStyle: const TextStyle(
                               color: Colors.white,
                               fontSize: 20,
                               fontStyle: FontStyle.normal),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18.0),
+                            borderRadius: BorderRadius.circular(10.0),
                           ),
                         ),
                       )

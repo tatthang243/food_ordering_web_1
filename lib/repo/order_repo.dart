@@ -29,6 +29,12 @@ class OrderRepository {
     return data;
   }
 
+  Stream<OrderModel> getStreamFromFirebase() {
+    return _docRef
+        .snapshots()
+        .map((event) => OrderModel.fromJson(event.data()));
+  }
+
   Future<void> updateOrder({required OrderModel order}) async {
     return _docRef.update(order.toJson());
   }

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -43,28 +45,52 @@ class _AdminScreenState extends State<AdminScreen> {
         builder: (context, AsyncSnapshot<String> snapshot) {
           if (snapshot.hasData) {
             return Scaffold(
-              appBar: AppBar(
-                title: Text("Admin Page"),
-                automaticallyImplyLeading: false,
-                centerTitle: true,
-              ),
-              body: Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: GridView.count(
-                        crossAxisCount: 2,
-                        childAspectRatio: 2,
-                        mainAxisSpacing: screenWidth / 30, //fix spacing later
-                        crossAxisSpacing: screenWidth / 20, //fix spacing laters
-                        padding: EdgeInsets.all(screenWidth / 30),
-                        children: [
-                          for (var tableNum = 1; tableNum < 6 + 1; tableNum++)
-                            TableClass(tableNum)
-                        ]),
-                  ),
-                  Expanded(flex: 1, child: RobotManagementWidget())
-                ],
+              backgroundColor: Colors.grey[200],
+              body: Padding(
+                padding: EdgeInsets.all(30),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 1,
+                      child: Container(
+                          decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20)),
+                          padding: EdgeInsets.all(50),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Bàn',
+                                style: TextStyle(
+                                    fontSize: 30, fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(
+                                height: 30,
+                              ),
+                              for (var tableNum = 1;
+                                  tableNum < 6 + 1;
+                                  tableNum++)
+                                Column(
+                                  children: [
+                                    AspectRatio(
+                                        aspectRatio: 264 / 53,
+                                        child: TableClass(tableNum)),
+                                    SizedBox(
+                                      height: 30,
+                                    )
+                                  ],
+                                )
+                            ],
+                          )),
+                    ),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Expanded(flex: 3, child: RobotManagementWidget())
+                  ],
+                ),
               ),
               floatingActionButton: FloatingActionButton(
                 child: Icon(Icons.abc),
@@ -81,14 +107,36 @@ class _AdminScreenState extends State<AdminScreen> {
   }
 
   Widget RobotManagementWidget() {
-    return Column(
-      children: [
-        for (int robot = 1; robot < robotCount + 1; robot++)
+    return Container(
+      decoration: BoxDecoration(
+          color: Colors.white, borderRadius: BorderRadius.circular(20)),
+      padding: EdgeInsets.only(left: 50, right: 50, top: 50),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Text(
+            'ROBOT',
+            style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(
+            height: 30,
+          ),
           Expanded(
-            flex: 1,
-            child: RobotWidget(robot, numOfTables),
+            child: Container(
+              child: GridView.count(
+                crossAxisCount: 3,
+                childAspectRatio: 297 / 504,
+                crossAxisSpacing: 30,
+                children: [
+                  for (int robot = 1; robot < robotCount + 1; robot++)
+                    Container(child: RobotWidget(robot, numOfTables))
+                ],
+              ),
+            ),
           )
-      ],
+        ],
+      ),
     );
   }
 }

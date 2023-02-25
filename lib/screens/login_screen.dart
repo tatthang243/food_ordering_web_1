@@ -28,15 +28,6 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    _getSession();
-    print("session " + isLogin.toString());
-  }
-
-  _getSession() async {
-    isLogin = await FlutterSession().get("isLogin");
-    setState(() {
-      loginState = isLogin.toString();
-    });
   }
 
   _setSession(String _id, int _table, String _restaurantId) async {
@@ -44,28 +35,47 @@ class _LoginScreenState extends State<LoginScreen> {
     await session.set("id", _id);
     await session.set("table", _table);
     await session.set("restaurantId", _restaurantId);
+    print(await session.get("isLogin"));
     QR.toName(AppRoutes.menuPage);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("This is the login page")),
+      appBar: AppBar(
+        centerTitle: true,
+        title: Text(
+          "Login page",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+        ),
+        backgroundColor: Colors.black,
+      ),
       body: Center(
         child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black, foregroundColor: Colors.white),
             child: Text("Press to login"),
             onPressed: () async {
               bool docCreated = false;
-              while (!docCreated) {
-                id = generateRandomString(20);
-                table = 1;
-                restaurantId = "Restaurant A";
-                docCreated = await NewDocRepository(
-                        isLogin: isLogin,
-                        table: table,
-                        restaurantId: restaurantId,
-                        id: id)
-                    .createNewDoc();
+              table = 1;
+              restaurantId = "Restaurant A";
+              String temp_id = id = await NewDocRepository(
+                      isLogin: isLogin,
+                      table: table,
+                      restaurantId: restaurantId)
+                  .getOpenOrderId();
+              if (temp_id == '') {
+                while (!docCreated) {
+                  id = generateRandomString(20);
+                  docCreated = await NewDocRepository(
+                    isLogin: isLogin,
+                    table: table,
+                    restaurantId: restaurantId,
+                  ).createNewDoc(id);
+                }
+              } else {
+                id = temp_id;
+                docCreated = true;
               }
               _setSession(id, table, restaurantId);
             }),

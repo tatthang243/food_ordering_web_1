@@ -31,7 +31,7 @@ class AdminRepository {
     return allStreamOrders;
   }
 
-  Stream<OrderModel> getEachTables(int table) {
+  Stream<OrderModel> getEachTable(int table) {
     return _docRef
         .collection('table' + table.toString())
         .where('closed', isEqualTo: false)
