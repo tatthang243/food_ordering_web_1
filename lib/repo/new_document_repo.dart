@@ -27,7 +27,7 @@ class NewDocRepository {
   }
 
   Future<bool> createNewDoc(String id) async {
-    final initData = {'closed': false, 'Items': []};
+    final initData = {'closed': false, 'Items': [], 'id': id};
     return _docRef.doc(id).get().then((doc) {
       if (doc.exists) {
         return false;

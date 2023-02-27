@@ -6,7 +6,7 @@ class AdminRepository {
   AdminRepository({required this.restaurantId});
   String restaurantId;
   late int numOfTables;
-  late Map<dynamic, dynamic> allCurrentOrders = {};
+  late Map<dynamic, OrderModel?> allCurrentOrders = {};
   late Map<int, Stream<dynamic>> allStreamOrders = {};
   late final _docRef =
       FirebaseFirestore.instance.collection('Main').doc(restaurantId);
@@ -41,7 +41,12 @@ class AdminRepository {
             event.docs.map((e) => (OrderModel.fromJson(e.data()))).first);
   }
 
-  Future<Map<dynamic, dynamic>> getAllCurrentOrders() async {
+  Stream<Map<String, dynamic>> getSumOfAllOrders() {
+    Map<dynamic, Stream<OrderModel>> allStreamOrders = {};
+    return _docRef.snapshots().map((event) => event.data());
+  }
+
+  Future<Map<dynamic, OrderModel?>> getAllCurrentOrders() async {
     numOfTables =
         await _docRef.get().then((value) => (value['tableCount'])) as int;
 

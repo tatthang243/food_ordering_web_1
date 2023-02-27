@@ -28,108 +28,128 @@ class _OrderDialogState extends State<OrderDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-        insetPadding: EdgeInsets.all(50),
+        // insetPadding: EdgeInsets.symmetric(vertical: 90, horizontal: 50),
         elevation: 0,
         backgroundColor: Colors.transparent,
-        child: ClipRRect(
-            borderRadius: BorderRadius.circular(20.0),
-            child: Scaffold(
-                body: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  alignment: Alignment.centerRight,
-                  child: IconButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      icon: Icon(Icons.close)),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      AspectRatio(
-                        aspectRatio: 16 / 9,
-                        child: Container(
-                          child: Image.network(
-                            widget.foodItem['picture'],
-                            fit: BoxFit.fitWidth,
-                          ),
+        child: AspectRatio(
+          aspectRatio: 400 / 560,
+          child: FittedBox(
+            child: Container(
+              height: 560,
+              width: 400,
+              child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20.0),
+                  child: Scaffold(
+                      body: SingleChildScrollView(
+                    padding: EdgeInsets.only(bottom: 20),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 10),
+                          alignment: Alignment.centerRight,
+                          child: IconButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              icon: Icon(Icons.close)),
                         ),
-                      ),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            widget.foodItem['meal'],
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              AspectRatio(
+                                aspectRatio: 16 / 9,
+                                child: Container(
+                                  child: Image.network(
+                                    widget.foodItem['picture'],
+                                    fit: BoxFit.fitWidth,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                height: 10,
+                              ),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Text(
+                                    widget.foodItem['meal'],
+                                  ),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  Text(widget.foodItem['price'].toString()),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  Text(widget.foodItem['description']),
+                                ],
+                              ),
+                              SizedBox(height: 40),
+                              Text('Giá thành: ' +
+                                  (widget.foodItem['price'] * orderAmount)
+                                      .toString()),
+                              SizedBox(height: 10),
+                              QuantityInput(
+                                  buttonColor: Colors.white,
+                                  iconColor: Colors.grey.shade500,
+                                  acceptsZero: true,
+                                  acceptsNegatives: false,
+                                  type: QuantityInputType.int,
+                                  value: orderAmount,
+                                  onChanged: (value) => setState(() =>
+                                      orderAmount = int.parse(
+                                          value.replaceAll(',', '')))),
+                              SizedBox(
+                                height: 8,
+                              ),
+                              ElevatedButton(
+                                onPressed: (() {
+                                  if (orderAmount != 0) {
+                                    item = Item(
+                                        orderAmount,
+                                        widget.foodItem['meal'],
+                                        'Pending',
+                                        DateTime.now(),
+                                        widget.foodItem['price'] * orderAmount);
+                                    OrderRepository(
+                                            id: widget.id,
+                                            restaurantId: widget.restaurantId,
+                                            table: widget.table,
+                                            isLogin: widget.isLogin)
+                                        .addOrder(item: item);
+                                  }
+                                }),
+                                child: Container(
+                                    width: double.infinity,
+                                    height: 40,
+                                    alignment: Alignment.center,
+                                    child: Text("Order")),
+                                style: ElevatedButton.styleFrom(
+                                  primary: Colors.black,
+                                  // side: BorderSide(color: Colors.yellow, width: 5),
+                                  textStyle: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontStyle: FontStyle.normal),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(5.0),
+                                  ),
+                                ),
+                              )
+                            ],
                           ),
-                          SizedBox(
-                            height: 10,
-                          ),
-                          Text(widget.foodItem['price'].toString()),
-                          SizedBox(
-                            height: 10,
-                          ),
-                          Text(widget.foodItem['description']),
-                        ],
-                      ),
-                      SizedBox(height: 50),
-                      Text('Giá thành: ' +
-                          (widget.foodItem['price'] * orderAmount).toString()),
-                      SizedBox(height: 10),
-                      QuantityInput(
-                          buttonColor: Colors.white,
-                          iconColor: Colors.grey.shade500,
-                          acceptsZero: true,
-                          acceptsNegatives: false,
-                          type: QuantityInputType.int,
-                          value: orderAmount,
-                          onChanged: (value) => setState(() => orderAmount =
-                              int.parse(value.replaceAll(',', '')))),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      ElevatedButton(
-                        onPressed: (() {
-                          if (orderAmount != 0) {
-                            item = Item(
-                                orderAmount,
-                                widget.foodItem['meal'],
-                                'Preparing',
-                                DateTime.now(),
-                                widget.foodItem['price'] * orderAmount);
-                            OrderRepository(
-                                    id: widget.id,
-                                    restaurantId: widget.restaurantId,
-                                    table: widget.table,
-                                    isLogin: widget.isLogin)
-                                .addOrder(item: item);
-                          }
-                        }),
-                        child: Text("Order"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          // side: BorderSide(color: Colors.yellow, width: 5),
-                          textStyle: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontStyle: FontStyle.normal),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                          ),
-                        ),
-                      )
-                    ],
-                  ),
-                )
-              ],
-            ))));
+                        )
+                      ],
+                    ),
+                  ))),
+            ),
+          ),
+        ));
   }
 }

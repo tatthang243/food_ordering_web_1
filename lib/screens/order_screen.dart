@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:food_ordering_web_1/repo/order_repo.dart';
 import 'package:food_ordering_web_1/utils/paths.dart';
+import 'package:provider/provider.dart';
 import 'package:qlevar_router/qlevar_router.dart';
 import 'package:quantity_input/quantity_input.dart';
 
@@ -10,6 +11,7 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_session/flutter_session.dart';
 import 'package:food_ordering_web_1/utils/food_map.dart';
 
+import '../model/order_model.dart';
 import 'order_dialog.dart';
 
 class OrderScreen extends StatefulWidget {
@@ -68,33 +70,107 @@ class OrderScreenState extends State<OrderScreen> {
                   automaticallyImplyLeading: false,
                   centerTitle: true,
                 ),
-                body: Column(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      height: 30,
-                      alignment: Alignment.centerRight,
-                      padding: EdgeInsets.only(right: 10),
-                      child: Text(
-                        "Table number: " + table.toString(),
-                        style: TextStyle(fontStyle: FontStyle.italic),
-                      ),
-                    ),
-                    Expanded(
-                      child: ListView.builder(
-                        scrollDirection: Axis.vertical,
-                        itemCount: map.length,
-                        itemBuilder: ((context, index) => Card(
-                                child: FoodItem(
-                              foodItem: map[index],
-                              table: table,
-                              id: id,
-                              restaurantId: restaurantId,
-                              isLogin: isLogin,
-                            ))),
-                      ),
-                    ),
-                  ],
+                body: StreamProvider<OrderModel>.value(
+                  value: OrderRepository(
+                          isLogin: isLogin,
+                          table: table,
+                          restaurantId: restaurantId,
+                          id: id)
+                      .getStreamFromFirebase(),
+                  initialData: OrderModel(true, [], id),
+                  child: Builder(
+                    builder: (context) {
+                      var order = Provider.of<OrderModel>(context);
+                      return Stack(
+                          alignment: AlignmentDirectional.center,
+                          children: [
+                            Column(
+                              children: [
+                                Container(
+                                  width: double.infinity,
+                                  height: 30,
+                                  alignment: Alignment.centerRight,
+                                  padding: EdgeInsets.only(right: 10),
+                                  child: Text(
+                                    "Table number: " + table.toString(),
+                                    style:
+                                        TextStyle(fontStyle: FontStyle.italic),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: ListView.builder(
+                                    scrollDirection: Axis.vertical,
+                                    itemCount: map.length,
+                                    itemBuilder: ((context, index) => Card(
+                                            child: FoodItem(
+                                          foodItem: map[index],
+                                          table: table,
+                                          id: id,
+                                          restaurantId: restaurantId,
+                                          isLogin: isLogin,
+                                        ))),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (order.items
+                                .any((element) => element.status == "Arrived"))
+                              Expanded(
+                                child: Container(
+                                  color: Colors.grey[400]?.withOpacity(0.9),
+                                ),
+                              ),
+                            if (order.items
+                                .any((element) => element.status == "Arrived"))
+                              Container(
+                                width: 280,
+                                height: 150,
+                                padding: EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(5)),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                        'Đồ của bạn đã đến. Vui lòng và lấy đồ và ấn nút "Đã nhận"'),
+                                    ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                            primary: Colors.green),
+                                        onPressed: () {
+                                          setState(() async {
+                                            for (var item in order.items) {
+                                              if (item.status == "Arrived") {
+                                                item.status = "Eating";
+                                              }
+                                            }
+                                            await OrderRepository(
+                                                    id: id,
+                                                    table: table,
+                                                    isLogin: true,
+                                                    restaurantId:
+                                                        'Restaurant A')
+                                                .updateOrder(order: order);
+                                          });
+                                        },
+                                        child: Container(
+                                          height: 46,
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            'Đã nhận',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ))
+                                  ],
+                                ),
+                              )
+                          ]);
+                    },
+                  ),
                 ));
           } else {
             return CircularProgressIndicator();

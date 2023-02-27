@@ -53,7 +53,7 @@ class OrderRepository {
   }
 
   Future<bool> createNewDoc() async {
-    final initData = {'closed': false, 'Items': []};
+    final initData = {'closed': false, 'Items': [], 'id': id};
     return _docRef
         .set(initData)
         .then((value) => true)

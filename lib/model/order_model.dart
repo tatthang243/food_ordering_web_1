@@ -3,16 +3,17 @@ import 'dart:convert';
 class OrderModel {
   bool closed;
   List<Item> items = [];
+  String id;
 
-  OrderModel(this.closed, this.items);
+  OrderModel(this.closed, this.items, this.id);
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     return OrderModel(
-      json['closed'],
-      (json['Items'] as List).map((i) {
-        return Item.fromJson(i);
-      }).toList(),
-    );
+        json['closed'],
+        (json['Items'] as List).map((i) {
+          return Item.fromJson(i);
+        }).toList(),
+        json['id']);
   }
 
   updateItem(Item item) {
@@ -24,7 +25,7 @@ class OrderModel {
     for (var item in items) {
       jsonList.add(item.toJson());
     }
-    return <String, dynamic>{'closed': closed, 'Items': jsonList};
+    return <String, dynamic>{'closed': closed, 'Items': jsonList, 'id': id};
   }
 }
 

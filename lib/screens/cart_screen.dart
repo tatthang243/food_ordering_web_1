@@ -57,7 +57,7 @@ class _CartScreenState extends State<CartScreen> {
                         restaurantId: restaurantId,
                         id: id)
                     .getStreamFromFirebase(),
-                initialData: OrderModel(true, []),
+                initialData: OrderModel(true, [], id),
                 child: Builder(
                   builder: (context) {
                     var orders = Provider.of<OrderModel>(context);

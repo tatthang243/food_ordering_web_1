@@ -9,10 +9,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:food_ordering_web_1/bloc/get_all_bloc/get_all_bloc.dart';
 import 'package:food_ordering_web_1/repo/admin_repo.dart';
 import 'package:food_ordering_web_1/widgets/table_widget.dart';
+import 'package:multiple_stream_builder/multiple_stream_builder.dart';
 import 'package:provider/provider.dart';
 
 import '../model/order_model.dart';
-import '../widgets/admin_page.dart';
 import '../widgets/robot_widget.dart';
 
 class AdminScreen extends StatefulWidget {
@@ -40,63 +40,106 @@ class _AdminScreenState extends State<AdminScreen> {
     var screenHeight = MediaQuery.of(context).size.height;
     var gridWidth = screenWidth * 2 / 3;
     var robotWidth = screenWidth / 3;
+    print("width " + screenWidth.toString());
+    print("height: " + screenHeight.toString());
+
     return FutureBuilder<String>(
         future: _loadSession(),
         builder: (context, AsyncSnapshot<String> snapshot) {
           if (snapshot.hasData) {
             return Scaffold(
               backgroundColor: Colors.grey[200],
-              body: Padding(
-                padding: EdgeInsets.all(30),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 1,
-                      child: Container(
-                          decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20)),
-                          padding: EdgeInsets.all(50),
-                          child: Column(
+              body: Center(
+                child: AspectRatio(
+                  aspectRatio: 1440 / 824,
+                  child: FittedBox(
+                    fit: BoxFit.fill,
+                    child: Container(
+                      height: 824,
+                      width: 1440,
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 74, vertical: 54),
+                      child: Row(
+                        children: [
+                          Column(
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Bàn',
-                                style: TextStyle(
-                                    fontSize: 30, fontWeight: FontWeight.bold),
-                              ),
+                              Container(
+                                  width: 334,
+                                  height: 558,
+                                  decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(20)),
+                                  padding: EdgeInsets.only(top: 34),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(left: 24),
+                                        child: Text(
+                                          'BÀN',
+                                          style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        height: 36,
+                                      ),
+                                      Divider(
+                                        height: 1,
+                                        thickness: 1,
+                                      ),
+                                      for (var tableNum = 1;
+                                          tableNum < 6 + 1;
+                                          tableNum++)
+                                        Column(
+                                          children: [
+                                            AspectRatio(
+                                                aspectRatio: 264 / 53,
+                                                child: TableClass(tableNum)),
+                                            Divider(
+                                              height: 1,
+                                              thickness: 1,
+                                            )
+                                          ],
+                                        )
+                                    ],
+                                  )),
                               SizedBox(
-                                height: 30,
+                                height: 38,
                               ),
-                              for (var tableNum = 1;
-                                  tableNum < 6 + 1;
-                                  tableNum++)
-                                Column(
-                                  children: [
-                                    AspectRatio(
-                                        aspectRatio: 264 / 53,
-                                        child: TableClass(tableNum)),
-                                    SizedBox(
-                                      height: 30,
-                                    )
-                                  ],
-                                )
+                              SumOfAllOrders()
                             ],
-                          )),
+                          ),
+                          SizedBox(
+                            width: 44,
+                          ),
+                          Container(width: 914, child: RobotManagementWidget())
+                        ],
+                      ),
                     ),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    Expanded(flex: 3, child: RobotManagementWidget())
-                  ],
+                  ),
                 ),
               ),
               floatingActionButton: FloatingActionButton(
                 child: Icon(Icons.abc),
                 onPressed: () async {
-                  print(await AdminRepository(restaurantId: 'Restaurant A')
-                      .getAllCurrentOrders());
+                  var sumAll = 0;
+                  await AdminRepository(restaurantId: 'Restaurant A')
+                      .getAllCurrentOrders()
+                      .then((value) => value.forEach((key, value) {
+                            if (value != null) {
+                              for (var element in value.items) {
+                                sumAll += element.amount;
+                              }
+                            }
+                          }));
+                  print(sumAll);
                 },
               ),
             );
@@ -106,27 +149,87 @@ class _AdminScreenState extends State<AdminScreen> {
         });
   }
 
+  Widget SumOfAllOrders() {
+    return StreamBuilder6<OrderModel, OrderModel, OrderModel, OrderModel,
+            OrderModel, OrderModel>(
+        streams: StreamTuple6(
+            AdminRepository(restaurantId: 'Restaurant A').getEachTable(1),
+            AdminRepository(restaurantId: 'Restaurant A').getEachTable(2),
+            AdminRepository(restaurantId: 'Restaurant A').getEachTable(3),
+            AdminRepository(restaurantId: 'Restaurant A').getEachTable(4),
+            AdminRepository(restaurantId: 'Restaurant A').getEachTable(5),
+            AdminRepository(restaurantId: 'Restaurant A').getEachTable(6)),
+        initialData: InitialDataTuple6(null, null, null, null, null, null),
+        builder: ((context, snapshots) {
+          return FutureBuilder<int>(
+              future: sumAll(),
+              builder: (context, snapshot) {
+                return Container(
+                  height: 120,
+                  width: 334,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  padding: EdgeInsets.only(top: 24, left: 24, right: 47),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'TỔNG ĐƠN',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        (snapshot.data ?? 0).toString(),
+                        style: TextStyle(fontSize: 40),
+                      )
+                    ],
+                  ),
+                );
+              });
+        }));
+  }
+
+  Future<int> sumAll() async {
+    var sumAll = 0;
+    await AdminRepository(restaurantId: 'Restaurant A')
+        .getAllCurrentOrders()
+        .then((value) => value.forEach((key, value) {
+              if (value != null) {
+                for (var element in value.items) {
+                  sumAll += element.amount;
+                }
+              }
+            }));
+    return sumAll;
+  }
+
   Widget RobotManagementWidget() {
     return Container(
       decoration: BoxDecoration(
           color: Colors.white, borderRadius: BorderRadius.circular(20)),
-      padding: EdgeInsets.only(left: 50, right: 50, top: 50),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Text(
-            'ROBOT',
-            style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+          Padding(
+            padding: const EdgeInsets.only(top: 34, left: 45),
+            child: Text(
+              'ROBOT',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
           ),
           SizedBox(
-            height: 30,
+            height: 12,
           ),
           Expanded(
             child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 34),
               child: GridView.count(
                 crossAxisCount: 3,
-                childAspectRatio: 297 / 504,
+                childAspectRatio: 258 / 620,
                 crossAxisSpacing: 30,
                 children: [
                   for (int robot = 1; robot < robotCount + 1; robot++)

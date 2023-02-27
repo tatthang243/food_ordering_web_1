@@ -53,18 +53,19 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Center(
         child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black, foregroundColor: Colors.white),
+              primary: Colors.black,
+            ),
             child: Text("Press to login"),
             onPressed: () async {
               bool docCreated = false;
               table = 1;
               restaurantId = "Restaurant A";
-              String temp_id = id = await NewDocRepository(
+              String tempId = await NewDocRepository(
                       isLogin: isLogin,
                       table: table,
                       restaurantId: restaurantId)
                   .getOpenOrderId();
-              if (temp_id == '') {
+              if (tempId == '') {
                 while (!docCreated) {
                   id = generateRandomString(20);
                   docCreated = await NewDocRepository(
@@ -74,9 +75,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   ).createNewDoc(id);
                 }
               } else {
-                id = temp_id;
+                id = tempId;
                 docCreated = true;
               }
+              print('id: ' + id);
               _setSession(id, table, restaurantId);
             }),
       ),

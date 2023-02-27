@@ -24,118 +24,89 @@ class _RobotWidgetState extends State<RobotWidget> {
     return Container(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          AspectRatio(
-            aspectRatio: 297 / 450,
-            child: Container(
-                decoration: BoxDecoration(color: Colors.grey[200]),
-                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Container(
+            width: 182,
+            height: 138,
+            color: Colors.amber,
+          ),
+          SizedBox(
+            height: 12,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '•',
+                style: TextStyle(fontSize: 30),
+              ),
+              SizedBox(
+                width: 5,
+              ),
+              Text(
+                'Trạng thái robot',
+                style: TextStyle(fontSize: 16),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: 12,
+          ),
+          Container(
+            height: 350,
+            width: 258,
+            decoration: BoxDecoration(
+                color: Colors.grey[200],
+                border: Border.all(color: Colors.grey.shade400),
+                borderRadius: BorderRadius.circular(10)),
+            padding: EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+            child: ListView.builder(
+              scrollDirection: Axis.vertical,
+              itemCount: tempTask.length,
+              itemBuilder: ((context, index) => Card(
+                      child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
-                          children: [
-                            Text(
-                              'Robot' + widget.robot.toString(),
-                              style: TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              'Vi tri',
-                              style: TextStyle(
-                                  fontSize: 20, fontStyle: FontStyle.italic),
-                            )
-                          ],
+                        Text(
+                          tempTask[index]['meal'].toString() +
+                              ',  ' +
+                              'Table ' +
+                              tempTask[index]['table'].toString(),
+                          style: TextStyle(fontSize: 16),
                         ),
+                        DropdownButton(
+                            isExpanded: true,
+                            hint: tempTask[index]['tray'] == null
+                                ? Text('Select table')
+                                : Text('Tray ' +
+                                    tempTask[index]['tray'].toString()),
+                            items: List.generate(
+                                    widget.numOfTables, (index) => index + 1)
+                                .map((val) {
+                              return DropdownMenuItem<int>(
+                                value: val,
+                                child: Text('Tray ' + val.toString()),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              setState(() {
+                                tempTask[index]['tray'] = val;
+                              });
+                            }),
                       ],
                     ),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    Text(
-                      'Task:',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    SizedBox(
-                      height: 5,
-                    ),
-                    Expanded(
-                      child: Container(
-                        child: ListView.builder(
-                          scrollDirection: Axis.vertical,
-                          itemCount: tempTask.length,
-                          itemBuilder: ((context, index) => Card(
-                                  child: Container(
-                                padding: EdgeInsets.symmetric(
-                                    vertical: 10, horizontal: 20),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(
-                                      flex: 5,
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          SizedBox(
-                                            height: 7,
-                                          ),
-                                          Text(
-                                            tempTask[index]['meal'].toString(),
-                                            style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                          Text('Table ' +
-                                              tempTask[index]['table']
-                                                  .toString())
-                                        ],
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 4,
-                                      child: DropdownButton(
-                                          isExpanded: true,
-                                          hint: tempTask[index]['tray'] == null
-                                              ? Text('Select table')
-                                              : Text('Tray ' +
-                                                  tempTask[index]['tray']
-                                                      .toString()),
-                                          items: List.generate(
-                                              widget.numOfTables,
-                                              (index) => index + 1).map((val) {
-                                            return DropdownMenuItem<int>(
-                                              value: val,
-                                              child: Text(
-                                                  'Tray ' + val.toString()),
-                                            );
-                                          }).toList(),
-                                          onChanged: (val) {
-                                            setState(() {
-                                              tempTask[index]['tray'] = val;
-                                            });
-                                          }),
-                                    )
-                                  ],
-                                ),
-                              ))),
-                        ),
-                      ),
-                    )
-                  ],
-                )),
+                  ))),
+            ),
+          ),
+          SizedBox(
+            height: 20,
           ),
           ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(primary: Colors.black),
               onPressed: () {
                 if (tempTask.any((element) => element['tray'] == null)) {
                   print('select all table');
@@ -144,15 +115,14 @@ class _RobotWidgetState extends State<RobotWidget> {
                 }
               },
               child: Container(
-                height: 28,
-                width: 100,
+                height: 46,
+                width: 258,
                 alignment: Alignment.center,
                 child: Text(
                   'Dispatch',
                   style: TextStyle(
-                      fontSize: 18,
-                      fontStyle: FontStyle.italic,
-                      fontWeight: FontWeight.bold),
+                    fontSize: 16,
+                  ),
                 ),
               ))
         ],

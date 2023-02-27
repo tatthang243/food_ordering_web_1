@@ -15,10 +15,11 @@ class AppRoutes {
 
   final routes = [
     QRoute(
-        name: loginPage,
-        path: '/login',
-        builder: () => LoginScreen(),
-        middleware: [LoginMiddleware()]),
+      name: loginPage,
+      path: '/login',
+      builder: () => LoginScreen(),
+      // middleware: [LoginMiddleware()]
+    ),
     QRoute(
       name: adminPage,
       path: '/admin',
