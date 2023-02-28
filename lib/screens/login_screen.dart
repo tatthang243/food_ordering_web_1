@@ -26,7 +26,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void initState() {
+    if (QR.params['table'] != null) {
+      table = (QR.params['table']!.asInt)!;
+    }
+    if (QR.params['restaurantId'] != null) {
+      restaurantId = QR.params['restaurantId']!.toString();
+    }
+
     // TODO: implement initState
+    // print('table ' + table.toString());
+    // print('restaurant ' + restaurantId.toString());
+
     super.initState();
   }
 
@@ -39,50 +49,62 @@ class _LoginScreenState extends State<LoginScreen> {
     QR.toName(AppRoutes.menuPage);
   }
 
+  Future<String> _createDoc() async {
+    if (QR.params['table'] == null || QR.params['restaurantId'] == null) {
+      return 'nothing';
+    } else {
+      bool docCreated = false;
+      // table = 1;
+      // restaurantId = "Restaurant A";
+      String tempId = await NewDocRepository(
+              isLogin: isLogin, table: table, restaurantId: restaurantId)
+          .getOpenOrderId();
+      if (tempId == '') {
+        while (!docCreated) {
+          id = generateRandomString(20);
+          docCreated = await NewDocRepository(
+            isLogin: isLogin,
+            table: table,
+            restaurantId: restaurantId,
+          ).createNewDoc(id);
+        }
+      } else {
+        id = tempId;
+        docCreated = true;
+      }
+      print('id: ' + id);
+      _setSession(id, table, restaurantId);
+      return 'bye';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: Text(
-          "Login page",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-        ),
-        backgroundColor: Colors.black,
-      ),
-      body: Center(
-        child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              primary: Colors.black,
-            ),
-            child: Text("Press to login"),
-            onPressed: () async {
-              bool docCreated = false;
-              table = 1;
-              restaurantId = "Restaurant A";
-              String tempId = await NewDocRepository(
-                      isLogin: isLogin,
-                      table: table,
-                      restaurantId: restaurantId)
-                  .getOpenOrderId();
-              if (tempId == '') {
-                while (!docCreated) {
-                  id = generateRandomString(20);
-                  docCreated = await NewDocRepository(
-                    isLogin: isLogin,
-                    table: table,
-                    restaurantId: restaurantId,
-                  ).createNewDoc(id);
-                }
-              } else {
-                id = tempId;
-                docCreated = true;
-              }
-              print('id: ' + id);
-              _setSession(id, table, restaurantId);
-            }),
-      ),
-    );
+    return FutureBuilder<String>(
+        future: _createDoc(),
+        builder: (context, AsyncSnapshot<String> snapshot) {
+          if (snapshot.hasData) {
+            return Scaffold(
+              appBar: AppBar(
+                centerTitle: true,
+                title: Text(
+                  "Login page",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                ),
+                backgroundColor: Colors.black,
+              ),
+              body: Center(child: Text('Scan QR code to login')),
+            );
+          } else {
+            return Center(
+                child: Container(
+                    height: 50,
+                    width: 50,
+                    child: CircularProgressIndicator(
+                      color: Colors.black,
+                    )));
+          }
+        });
   }
 }
 

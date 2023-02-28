@@ -226,7 +226,8 @@ class _FoodItemState extends State<FoodItem> {
                 child: Container(
                   decoration:
                       BoxDecoration(borderRadius: BorderRadius.circular(10)),
-                  child: Image.network(widget.foodItem['picture']),
+                  child: Image.network(widget.foodItem['picture'],
+                      fit: BoxFit.cover),
                 )),
             const SizedBox(
               width: 15,
@@ -245,7 +246,7 @@ class _FoodItemState extends State<FoodItem> {
                         style: TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold),
                       ),
-                      Text('Giá: ' + widget.foodItem['price'].toString(),
+                      Text(widget.foodItem['price'].toString(),
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -254,16 +255,19 @@ class _FoodItemState extends State<FoodItem> {
                     ],
                   ),
                   SizedBox(
-                    height: 10,
+                    height: 2,
                   ),
-                  Text(
-                    widget.foodItem['description'],
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontStyle: FontStyle.italic,
+                  Padding(
+                    padding: const EdgeInsets.only(right: 60),
+                    child: Text(
+                      widget.foodItem['description'],
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   )
                 ],
               ),

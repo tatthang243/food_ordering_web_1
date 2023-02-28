@@ -11,6 +11,7 @@ import 'package:food_ordering_web_1/repo/admin_repo.dart';
 import 'package:food_ordering_web_1/widgets/table_widget.dart';
 import 'package:multiple_stream_builder/multiple_stream_builder.dart';
 import 'package:provider/provider.dart';
+import 'package:roslibdart/roslibdart.dart';
 
 import '../model/order_model.dart';
 import '../widgets/robot_widget.dart';
@@ -25,6 +26,22 @@ class AdminScreen extends StatefulWidget {
 class _AdminScreenState extends State<AdminScreen> {
   int numOfTables = 0;
   int robotCount = 0;
+  late Ros ros;
+  late Topic item;
+
+  @override
+  void initState() {
+    ros = Ros(url: 'ws://localhost:9090');
+    item = Topic(
+        ros: ros,
+        name: '/item',
+        type: "std_msgs/String",
+        reconnectOnClose: true,
+        queueLength: 10,
+        queueSize: 10);
+    super.initState();
+    ros.connect();
+  }
 
   Future<String> _loadSession() async {
     numOfTables =

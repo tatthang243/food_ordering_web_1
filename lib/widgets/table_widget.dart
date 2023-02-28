@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:food_ordering_web_1/model/order_model.dart';
 import 'package:food_ordering_web_1/repo/admin_repo.dart';
 import 'package:food_ordering_web_1/repo/order_repo.dart';
 import 'package:provider/provider.dart';
+import 'package:roslibdart/roslibdart.dart';
 
 class TableClass extends StatefulWidget {
   TableClass(this.tableNum, {Key? key}) : super(key: key);
@@ -13,6 +16,39 @@ class TableClass extends StatefulWidget {
 }
 
 class _TableClassState extends State<TableClass> {
+  late Ros ros;
+  late Topic item;
+
+  @override
+  void initState() {
+    ros = Ros(url: 'ws://localhost:9090');
+    item = Topic(
+        ros: ros,
+        name: '/topic',
+        type: "std_msgs/String",
+        reconnectOnClose: true,
+        queueLength: 10,
+        queueSize: 10);
+    super.initState();
+    ros.connect();
+    // Timer.periodic(const Duration(milliseconds: 100), (timer) async {
+    //   await publishOrder();
+    //   setState(() {});
+    // });
+  }
+
+  // OrderModel orderToBePublished = OrderModel(true, [], '');
+
+  Future<void> publishOrder(Item itemToBePublished) async {
+    Map<String, dynamic> _jsonMsg = {
+      "table": widget.tableNum,
+      "meal": itemToBePublished.meal,
+      "amount": itemToBePublished.amount,
+      "time": itemToBePublished.time
+    };
+    await item.publish({"data": _jsonMsg.toString()});
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamProvider<OrderModel>.value(
@@ -237,7 +273,6 @@ class _TableClassState extends State<TableClass> {
                                           'Preparing',
                                           style: TextStyle(
                                               fontSize: 20,
-                                              fontStyle: FontStyle.italic,
                                               fontWeight: FontWeight.bold),
                                         ),
                                       )),
@@ -263,6 +298,8 @@ class _TableClassState extends State<TableClass> {
                                                     restaurantId:
                                                         'Restaurant A')
                                                 .updateOrder(order: order);
+                                            await publishOrder(
+                                                order.items[index]);
                                           }
                                         });
                                       },
@@ -273,7 +310,6 @@ class _TableClassState extends State<TableClass> {
                                           'Ready',
                                           style: TextStyle(
                                               fontSize: 20,
-                                              fontStyle: FontStyle.italic,
                                               fontWeight: FontWeight.bold),
                                         ),
                                       )),
@@ -303,7 +339,6 @@ class _TableClassState extends State<TableClass> {
                                           'Cancel',
                                           style: TextStyle(
                                               fontSize: 20,
-                                              fontStyle: FontStyle.italic,
                                               fontWeight: FontWeight.bold),
                                         ),
                                       ))

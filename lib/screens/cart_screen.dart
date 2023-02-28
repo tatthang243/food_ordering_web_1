@@ -74,6 +74,7 @@ class _CartScreenState extends State<CartScreen> {
                     }
                     return Scaffold(
                       appBar: AppBar(
+                          backgroundColor: Colors.black,
                           automaticallyImplyLeading: false,
                           centerTitle: true,
                           title: Text("Your Cart"),
