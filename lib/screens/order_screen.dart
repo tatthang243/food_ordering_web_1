@@ -52,36 +52,83 @@ class OrderScreenState extends State<OrderScreen> {
         future: _loadSession(),
         builder: (context, AsyncSnapshot<String> snapshot) {
           if (snapshot.hasData) {
-            return Scaffold(
-                backgroundColor: Colors.grey[200],
-                floatingActionButton: FloatingActionButton(
-                  backgroundColor: Colors.black,
-                  child: Icon(Icons.shopping_cart_outlined),
-                  onPressed: () {
-                    QR.toName(AppRoutes.cartPage);
-                  },
-                ),
-                appBar: AppBar(
-                  title: Text(
-                    "The Menu",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  backgroundColor: Colors.black,
-                  automaticallyImplyLeading: false,
-                  centerTitle: true,
-                ),
-                body: StreamProvider<OrderModel>.value(
-                  value: OrderRepository(
-                          isLogin: isLogin,
-                          table: table,
-                          restaurantId: restaurantId,
-                          id: id)
-                      .getStreamFromFirebase(),
-                  initialData: OrderModel(true, [], id),
-                  child: Builder(
-                    builder: (context) {
-                      var order = Provider.of<OrderModel>(context);
-                      return Stack(
+            return StreamProvider<OrderModel>.value(
+                value: OrderRepository(
+                        isLogin: isLogin,
+                        table: table,
+                        restaurantId: restaurantId,
+                        id: id)
+                    .getStreamFromFirebase(),
+                initialData: OrderModel(true, [], id),
+                child: Builder(builder: (context) {
+                  var order = Provider.of<OrderModel>(context);
+                  List allTrays = [];
+                  String stringTray = '';
+                  bool cleanUpEnable = false;
+                  if (order.items
+                      .any((element) => element.status == "Eating")) {
+                    cleanUpEnable = true;
+                  }
+                  for (var item in order.items
+                      .where((element) => element.status == "Arrived")) {
+                    for (var tray in item.tray ?? []) {
+                      allTrays.add(tray);
+                    }
+                  }
+                  for (var element in allTrays) {
+                    stringTray += element.toString() + ' ';
+                  }
+                  return Scaffold(
+                      backgroundColor: Colors.grey[200],
+                      floatingActionButton:
+                          Wrap(direction: Axis.vertical, children: [
+                        Container(
+                          child: FloatingActionButton(
+                            backgroundColor: cleanUpEnable
+                                ? Colors.green[300]
+                                : Colors.grey[400],
+                            onPressed: () {
+                              setState(() async {
+                                if (cleanUpEnable) {
+                                  for (var item in order.items) {
+                                    if (item.status == "Eating") {
+                                      item.status = "Send back";
+                                    }
+                                  }
+                                  await OrderRepository(
+                                          id: id,
+                                          table: table,
+                                          isLogin: true,
+                                          restaurantId: 'Restaurant A')
+                                      .updateOrder(order: order);
+                                  cleanUpEnable = false;
+                                }
+                              });
+                            },
+                            child: Icon(Icons.notifications_active),
+                          ),
+                        ),
+                        Container(
+                          margin: EdgeInsets.symmetric(vertical: 10),
+                          child: FloatingActionButton(
+                            backgroundColor: Colors.black,
+                            child: Icon(Icons.shopping_cart_outlined),
+                            onPressed: () {
+                              QR.toName(AppRoutes.cartPage);
+                            },
+                          ),
+                        ),
+                      ]),
+                      appBar: AppBar(
+                        title: Text(
+                          "The Menu",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        backgroundColor: Colors.black,
+                        automaticallyImplyLeading: false,
+                        centerTitle: true,
+                      ),
+                      body: Stack(
                           alignment: AlignmentDirectional.center,
                           children: [
                             Column(
@@ -113,11 +160,60 @@ class OrderScreenState extends State<OrderScreen> {
                                 ),
                               ],
                             ),
-                            if (order.items
-                                .any((element) => element.status == "Arrived"))
+                            if (order.items.any((element) =>
+                                element.status == "Arrived" ||
+                                element.status == "Take back"))
                               Expanded(
                                 child: Container(
                                   color: Colors.grey[400]?.withOpacity(0.9),
+                                ),
+                              ),
+                            if (order.items.any(
+                                (element) => element.status == "Take back"))
+                              Container(
+                                width: 280,
+                                height: 150,
+                                padding: EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(5)),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                        'Vui lòng đặt bát đĩa đãn ăn lên khay và ấn "Đã trả"'),
+                                    ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                            primary: Colors.green),
+                                        onPressed: () {
+                                          setState(() async {
+                                            for (var item in order.items) {
+                                              if (item.status == "Take back") {
+                                                item.status = "Taking back";
+                                              }
+                                            }
+                                            await OrderRepository(
+                                                    id: id,
+                                                    table: table,
+                                                    isLogin: true,
+                                                    restaurantId:
+                                                        'Restaurant A')
+                                                .updateOrder(order: order);
+                                          });
+                                        },
+                                        child: Container(
+                                          height: 46,
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            'Đã trả',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ))
+                                  ],
                                 ),
                               ),
                             if (order.items
@@ -135,7 +231,7 @@ class OrderScreenState extends State<OrderScreen> {
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                        'Đồ của bạn đã đến. Vui lòng và lấy đồ và ấn nút "Đã nhận"'),
+                                        'Đồ của bạn đã đến. Vui lòng và lấy đồ ở khay ${stringTray}và ấn nút "Đã nhận"'),
                                     ElevatedButton(
                                         style: ElevatedButton.styleFrom(
                                             primary: Colors.green),
@@ -144,6 +240,7 @@ class OrderScreenState extends State<OrderScreen> {
                                             for (var item in order.items) {
                                               if (item.status == "Arrived") {
                                                 item.status = "Eating";
+                                                item.tray = null;
                                               }
                                             }
                                             await OrderRepository(
@@ -168,10 +265,8 @@ class OrderScreenState extends State<OrderScreen> {
                                   ],
                                 ),
                               )
-                          ]);
-                    },
-                  ),
-                ));
+                          ]));
+                }));
           } else {
             return CircularProgressIndicator();
           }
@@ -215,7 +310,7 @@ class _FoodItemState extends State<FoodItem> {
       },
       child: Container(
         width: double.infinity,
-        height: 100,
+        height: 115,
         padding: EdgeInsets.all(10),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -237,23 +332,16 @@ class _FoodItemState extends State<FoodItem> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.foodItem['meal'],
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      Text(widget.foodItem['price'].toString(),
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ))
-                    ],
+                  Text(
+                    widget.foodItem['meal'],
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
+                  Text(widget.foodItem['price'].toString(),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      )),
                   SizedBox(
                     height: 2,
                   ),

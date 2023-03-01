@@ -46,6 +46,34 @@ class AdminRepository {
     return _docRef.snapshots().map((event) => event.data());
   }
 
+  Future<void> updateItem(
+      {required int table,
+      required DateTime time,
+      required List<dynamic> tray}) async {
+    var tempId = await _docRef
+        .collection('table' + table.toString())
+        .where('closed', isEqualTo: false)
+        .limit(1)
+        .get(
+          GetOptions(source: Source.serverAndCache),
+        )
+        .then((value) => value.docs.first.id);
+    var doc =
+        await _docRef.collection('table' + table.toString()).doc(tempId).get(
+              GetOptions(source: Source.serverAndCache),
+            );
+    var tempOrder = OrderModel.fromJson(doc.data()!);
+    for (var item in tempOrder.items) {
+      if (item.time == time) {
+        item.tray = tray;
+      }
+    }
+    _docRef
+        .collection('table' + table.toString())
+        .doc(tempId)
+        .update(tempOrder.toJson());
+  }
+
   Future<Map<dynamic, OrderModel?>> getAllCurrentOrders() async {
     numOfTables =
         await _docRef.get().then((value) => (value['tableCount'])) as int;

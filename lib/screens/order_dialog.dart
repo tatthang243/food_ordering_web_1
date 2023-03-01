@@ -91,7 +91,7 @@ class _OrderDialogState extends State<OrderDialog> {
                                 ],
                               ),
                               SizedBox(height: 40),
-                              Text('Giá thành: ' +
+                              Text('Total: ' +
                                   (widget.foodItem['price'] * orderAmount)
                                       .toString()),
                               SizedBox(height: 10),
@@ -112,11 +112,13 @@ class _OrderDialogState extends State<OrderDialog> {
                                 onPressed: (() {
                                   if (orderAmount != 0) {
                                     item = Item(
+                                        widget.table,
                                         orderAmount,
                                         widget.foodItem['meal'],
                                         'Pending',
                                         DateTime.now(),
-                                        widget.foodItem['price'] * orderAmount);
+                                        widget.foodItem['price'] * orderAmount,
+                                        null);
                                     OrderRepository(
                                             id: widget.id,
                                             restaurantId: widget.restaurantId,

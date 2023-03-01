@@ -205,11 +205,11 @@ class _CartScreenState extends State<CartScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      'Số lượng: ' +
+                      'Amount: ' +
                           foodItem['amount'].toString() +
-                          "\t Trạng thái: " +
+                          "\t Status: " +
                           foodItem['status'].toString() +
-                          '\nThời gian: ' +
+                          '\Time: ' +
                           foodItem['time'].toString(),
                       style: TextStyle(
                         fontSize: 10,
@@ -217,7 +217,7 @@ class _CartScreenState extends State<CartScreen> {
                       ),
                       maxLines: 2,
                     ),
-                    Text('Giá: ' + foodItem['price'].toString()),
+                    Text('Price: ' + foodItem['price'].toString()),
                   ],
                 )
               ],

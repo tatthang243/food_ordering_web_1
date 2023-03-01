@@ -24,12 +24,13 @@ class _TableClassState extends State<TableClass> {
     ros = Ros(url: 'ws://localhost:9090');
     item = Topic(
         ros: ros,
-        name: '/topic',
+        name: '/item',
         type: "std_msgs/String",
         reconnectOnClose: true,
         queueLength: 10,
         queueSize: 10);
     super.initState();
+
     ros.connect();
     // Timer.periodic(const Duration(milliseconds: 100), (timer) async {
     //   await publishOrder();
@@ -41,12 +42,15 @@ class _TableClassState extends State<TableClass> {
 
   Future<void> publishOrder(Item itemToBePublished) async {
     Map<String, dynamic> _jsonMsg = {
-      "table": widget.tableNum,
+      "destination": widget.tableNum,
+      "start": 0,
       "meal": itemToBePublished.meal,
-      "amount": itemToBePublished.amount,
+      // "amount": itemToBePublished.amount,
       "time": itemToBePublished.time
     };
-    await item.publish({"data": _jsonMsg.toString()});
+    for (int i = 0; i < itemToBePublished.amount; i++) {
+      await item.publish({"data": _jsonMsg.toString()});
+    }
   }
 
   @override
@@ -74,7 +78,7 @@ class _TableClassState extends State<TableClass> {
               item.status == "Send back" ||
               item.status == "Received back") {
             tableStatus["Eating"] = tableStatus["Eating"]! + item.amount;
-          } else if (item.status == "Eating") {
+          } else if (item.status == "Pending") {
             tableStatus["Pending"] = tableStatus["Pending"]! + item.amount;
           } else {
             continue;
@@ -351,120 +355,5 @@ class _TableClassState extends State<TableClass> {
                 );
               }),
             )));
-  }
-
-  Widget AdminOrderItemWidget(Item foodItem) {
-    return Container(
-        height: 50,
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(horizontal: 30),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-                flex: 1,
-                child: Text(
-                  foodItem.meal,
-                  style: TextStyle(fontSize: 20),
-                )),
-            Expanded(
-                flex: 1,
-                child: Text(
-                  'Số lượng: ' + foodItem.amount.toString(),
-                  style: TextStyle(fontSize: 20),
-                )),
-            Expanded(
-                flex: 1,
-                child: Text(
-                  'Giá thành: ' + foodItem.price.toString(),
-                  style: TextStyle(fontSize: 20),
-                )),
-            ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  primary: Colors.black,
-                ),
-                onPressed: () {
-                  setState(() {
-                    // _isPressed = true;
-                    foodItem.amount++;
-                  });
-                },
-                child: Container(
-                  height: 30,
-                  alignment: Alignment.center,
-                  child: Text(
-                    'Gọi lấy đơn',
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontStyle: FontStyle.italic,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ))
-          ],
-        ));
-  }
-}
-
-class AdminOrderItem extends StatefulWidget {
-  AdminOrderItem({Key? key, required this.foodItem}) : super(key: key);
-  Item foodItem;
-  @override
-  State<AdminOrderItem> createState() => _AdminOrderItemState();
-}
-
-class _AdminOrderItemState extends State<AdminOrderItem> {
-  bool _isPressed = false;
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        height: 50,
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(horizontal: 30),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-                flex: 1,
-                child: Text(
-                  widget.foodItem.meal,
-                  style: TextStyle(fontSize: 20),
-                )),
-            Expanded(
-                flex: 1,
-                child: Text(
-                  'Số lượng: ' + widget.foodItem.amount.toString(),
-                  style: TextStyle(fontSize: 20),
-                )),
-            Expanded(
-                flex: 1,
-                child: Text(
-                  'Giá thành: ' + widget.foodItem.price.toString(),
-                  style: TextStyle(fontSize: 20),
-                )),
-            ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  primary: !_isPressed ? Colors.black : Colors.grey[200],
-                ),
-                onPressed: () {
-                  setState(() {
-                    // _isPressed = true;
-                    widget.foodItem.amount++;
-                  });
-                },
-                child: Container(
-                  height: 30,
-                  alignment: Alignment.center,
-                  child: Text(
-                    'Gọi lấy đơn',
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontStyle: FontStyle.italic,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ))
-          ],
-        ));
   }
 }

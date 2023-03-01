@@ -13,7 +13,7 @@ class FoodMap {
       'description':
           'Classic steamed chicken, like your ancestors used to eat (and still now)',
       'picture':
-          'https://cdn-image.foodandwine.com/sites/default/files/201303-r-xl-steamed-chicken-with-scallions-and-ginger.jpg'
+          'https://www.foodandwine.com/thmb/ZPTdpUZ0IRTydL0-JjRbxzjbvhU=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/201303-r-xl-steamed-chicken-with-scallions-and-ginger-2000-613746e4d91a4d718dab0a6c7a9d8562.jpg'
     },
     {
       'meal': 'Roasted chicken',

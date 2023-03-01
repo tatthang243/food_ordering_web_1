@@ -43,6 +43,19 @@ class _AdminScreenState extends State<AdminScreen> {
     ros.connect();
   }
 
+  Future<void> sendBack(
+      {required int start,
+      required int destination,
+      required DateTime time}) async {
+    Map<String, dynamic> _jsonMsg = {
+      "destination": destination,
+      "start": start,
+      "meal": 'cleaning',
+      "time": time
+    };
+    await item.publish({"data": _jsonMsg.toString()});
+  }
+
   Future<String> _loadSession() async {
     numOfTables =
         await AdminRepository(restaurantId: 'Restaurant A').getNumberOfTables();
@@ -143,22 +156,6 @@ class _AdminScreenState extends State<AdminScreen> {
                   ),
                 ),
               ),
-              floatingActionButton: FloatingActionButton(
-                child: Icon(Icons.abc),
-                onPressed: () async {
-                  var sumAll = 0;
-                  await AdminRepository(restaurantId: 'Restaurant A')
-                      .getAllCurrentOrders()
-                      .then((value) => value.forEach((key, value) {
-                            if (value != null) {
-                              for (var element in value.items) {
-                                sumAll += element.amount;
-                              }
-                            }
-                          }));
-                  print(sumAll);
-                },
-              ),
             );
           } else {
             return LinearProgressIndicator();
@@ -217,6 +214,13 @@ class _AdminScreenState extends State<AdminScreen> {
               if (value != null) {
                 for (var element in value.items) {
                   sumAll += element.amount;
+                }
+                if (value.items
+                    .any((element) => element.status == 'Send back')) {
+                  sendBack(
+                      destination: 0,
+                      start: value.items[0].table,
+                      time: DateTime.now());
                 }
               }
             }));

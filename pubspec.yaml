@@ -70,6 +70,9 @@ flutter:
     - resources/cook2 1.png
     - resources/image 3.png
     - resources/image 4.png
+    - resources/robot 1.jpg
+    - resources/robot 2.jpg
+    - resources/robot 3.jpg    
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

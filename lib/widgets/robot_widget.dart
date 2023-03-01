@@ -1,5 +1,10 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:food_ordering_web_1/repo/admin_repo.dart';
+import 'package:roslibdart/roslibdart.dart';
 
 class RobotWidget extends StatefulWidget {
   RobotWidget(this.robot, this.numOfTables, {Key? key}) : super(key: key);
@@ -10,26 +15,97 @@ class RobotWidget extends StatefulWidget {
 }
 
 class _RobotWidgetState extends State<RobotWidget> {
+  late Ros ros;
+  late Topic task;
+  late Topic dispatch;
+
+  @override
+  void initState() {
+    ros = Ros(url: 'ws://localhost:9090');
+    task = Topic(
+        ros: ros,
+        name: '/task${widget.robot}',
+        type: "std_msgs/String",
+        reconnectOnClose: true,
+        queueLength: 0,
+        queueSize: 1000);
+    dispatch = Topic(
+        ros: ros,
+        name: '/dispatch${widget.robot}',
+        type: "std_msgs/String",
+        reconnectOnClose: true,
+        queueLength: 0,
+        queueSize: 1000);
+    super.initState();
+    ros.connect();
+
+    Timer.periodic(const Duration(milliseconds: 1000), (timer) async {
+      await task.subscribe(subscribeHandler);
+      // await task2.subscribe(subscribeHandler2);
+      // await task3.subscribe(subscribeHandler3);
+      setState(() {});
+    });
+  }
+
+  Future<void> dispatchRobot() async {
+    await dispatch.publish({"data": 'dispatch'});
+  }
+
+  String msgReceived = '';
+  var jsonTask = [];
+
+  Future<void> subscribeHandler(Map<String, dynamic> msg) async {
+    msgReceived = msg['data'].toString();
+    // var jsonTask = json.decode(msgReceived1);
+    // print('checking json');
+    // print(jsonTask[0]['meal']);
+    // setState(() {});
+    // json.encode(jsonTask);
+    try {
+      jsonTask = json.decode(msgReceived);
+    } catch (e) {}
+    // print("at json " + json.decode(msgReceived1)[0]['meal']);
+    print(json.decode(msgReceived));
+  }
+
   var tempTask = [
-    {'meal': 'Chicken', 'table': 2, 'tray': null},
-    {'meal': 'Chicken', 'table': 2, 'tray': null},
-    {'meal': 'Beef', 'table': 2, 'tray': null},
-    {'meal': 'Chicken', 'table': 3, 'tray': null},
-    {'meal': 'Pizza', 'table': 1, 'tray': null},
-    {'meal': 'Steak', 'table': 4, 'tray': null},
-    {'meal': 'Ribs', 'table': 4, 'tray': null},
+    {
+      'meal': 'Chicken',
+      'table': 2,
+      'time': DateTime.now().toString(),
+      'tray': null
+    },
+    {
+      'meal': 'Chicken',
+      'table': 2,
+      'time': DateTime.now().toString(),
+      'tray': null
+    },
+    {
+      'meal': 'Chicken',
+      'table': 2,
+      'time': DateTime.now().toString(),
+      'tray': null
+    },
   ];
+
   @override
   Widget build(BuildContext context) {
+    // print(json.decode(json.encode(tempTask)));
+    // print(tempTask.where((element) => element['meal'] == 'Chicken'));
     return Container(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
+          // Text(msgReceived1),
           Container(
             width: 182,
             height: 138,
-            color: Colors.amber,
+            child: Image.asset(
+              'resources/robot ${widget.robot.toString()}.jpg',
+              fit: BoxFit.cover,
+            ),
           ),
           SizedBox(
             height: 12,
@@ -63,7 +139,7 @@ class _RobotWidgetState extends State<RobotWidget> {
             padding: EdgeInsets.symmetric(vertical: 14, horizontal: 10),
             child: ListView.builder(
               scrollDirection: Axis.vertical,
-              itemCount: tempTask.length,
+              itemCount: jsonTask.length,
               itemBuilder: ((context, index) => Card(
                       child: Container(
                     padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
@@ -72,20 +148,19 @@ class _RobotWidgetState extends State<RobotWidget> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          tempTask[index]['meal'].toString() +
+                          jsonTask[index]['meal'].toString() +
                               ',  ' +
                               'Table ' +
-                              tempTask[index]['table'].toString(),
+                              jsonTask[index]['table'].toString(),
                           style: TextStyle(fontSize: 16),
                         ),
                         DropdownButton(
                             isExpanded: true,
-                            hint: tempTask[index]['tray'] == null
+                            hint: jsonTask[index]['tray'] == null
                                 ? Text('Select table')
                                 : Text('Tray ' +
-                                    tempTask[index]['tray'].toString()),
-                            items: List.generate(
-                                    widget.numOfTables, (index) => index + 1)
+                                    jsonTask[index]['tray'].toString()),
+                            items: List.generate(3, (index) => index + 1)
                                 .map((val) {
                               return DropdownMenuItem<int>(
                                 value: val,
@@ -94,7 +169,7 @@ class _RobotWidgetState extends State<RobotWidget> {
                             }).toList(),
                             onChanged: (val) {
                               setState(() {
-                                tempTask[index]['tray'] = val;
+                                jsonTask[index]['tray'] = val;
                               });
                             }),
                       ],
@@ -107,11 +182,47 @@ class _RobotWidgetState extends State<RobotWidget> {
           ),
           ElevatedButton(
               style: ElevatedButton.styleFrom(primary: Colors.black),
-              onPressed: () {
-                if (tempTask.any((element) => element['tray'] == null)) {
-                  print('select all table');
+              onPressed: () async {
+                if (jsonTask.any((element) => element['tray'] == null)) {
+                  showDialog(
+                      context: context,
+                      builder: (BuildContext context) => Dialog(
+                          alignment: Alignment.center,
+                          child: Container(
+                              height: 100,
+                              width: 200,
+                              alignment: Alignment.center,
+                              child: Text('select all trays'))));
                 } else {
-                  print(tempTask);
+                  // print(jsonTask);
+                  var timeList = [];
+                  for (var element in jsonTask) {
+                    if (!timeList.contains(element['time'])) {
+                      timeList.add(element['time']);
+                    }
+                  }
+                  for (var tempTime in timeList) {
+                    List<int> trayList = [];
+                    int tempTable = 0;
+                    for (var tempItem in jsonTask
+                        .where((element) => element['time'] == tempTime)) {
+                      trayList.add(tempItem['tray']);
+                      // print(tempItem);
+                      tempTable = tempItem['table'] as int;
+                    }
+                    print('table: ' +
+                        tempTable.toString() +
+                        'time: ' +
+                        tempTime +
+                        '' +
+                        trayList.toString());
+                    await AdminRepository(restaurantId: 'Restaurant A')
+                        .updateItem(
+                            table: tempTable,
+                            time: DateTime.parse(tempTime),
+                            tray: trayList);
+                  }
+                  await dispatchRobot();
                 }
               },
               child: Container(
