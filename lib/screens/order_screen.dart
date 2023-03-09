@@ -71,9 +71,9 @@ class OrderScreenState extends State<OrderScreen> {
                   }
                   for (var item in order.items
                       .where((element) => element.status == "Arrived")) {
-                    for (var tray in item.tray ?? []) {
-                      allTrays.add(tray);
-                    }
+                    // for (var tray in item.tray ?? []) {
+                    allTrays.add(item.tray);
+                    // }
                   }
                   for (var element in allTrays) {
                     stringTray += element.toString() + ' ';
@@ -183,7 +183,7 @@ class OrderScreenState extends State<OrderScreen> {
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                        'Vui lòng đặt bát đĩa đãn ăn lên khay và ấn "Đã trả"'),
+                                        'Vui lòng đặt bát đĩa đã ăn lên khay và ấn "Đã trả"'),
                                     ElevatedButton(
                                         style: ElevatedButton.styleFrom(
                                             primary: Colors.green),
@@ -308,59 +308,62 @@ class _FoodItemState extends State<FoodItem> {
                   isLogin: widget.isLogin,
                 ));
       },
-      child: Container(
-        width: double.infinity,
-        height: 115,
-        padding: EdgeInsets.all(10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            AspectRatio(
-                aspectRatio: 1 / 1,
-                child: Container(
-                  decoration:
-                      BoxDecoration(borderRadius: BorderRadius.circular(10)),
-                  child: Image.network(widget.foodItem['picture'],
-                      fit: BoxFit.cover),
-                )),
-            const SizedBox(
-              width: 15,
-            ),
-            Flexible(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.foodItem['meal'],
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  Text(widget.foodItem['price'].toString(),
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      )),
-                  SizedBox(
-                    height: 2,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(right: 60),
-                    child: Text(
-                      widget.foodItem['description'],
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontStyle: FontStyle.italic,
+      child: AspectRatio(
+        aspectRatio: 400 / 115,
+        child: FittedBox(
+          child: Container(
+            width: 400,
+            height: 115,
+            padding: EdgeInsets.all(10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                AspectRatio(
+                    aspectRatio: 1 / 1,
+                    child: Container(
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10)),
+                      child: Image.network(widget.foodItem['picture'],
+                          fit: BoxFit.cover),
+                    )),
+                const SizedBox(
+                  width: 15,
+                ),
+                Flexible(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.foodItem['meal'],
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  )
-                ],
-              ),
-            )
-          ],
+                      Text(widget.foodItem['price'].toString(),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          )),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 60),
+                        child: Text(
+                          widget.foodItem['description'],
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontStyle: FontStyle.italic,
+                          ),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      )
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ),
         ),
       ),
     );

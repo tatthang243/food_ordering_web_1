@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -28,6 +29,12 @@ class _AdminScreenState extends State<AdminScreen> {
   int robotCount = 0;
   late Ros ros;
   late Topic item;
+  late Topic dispatch_robot_1;
+  late Topic dispatch_robot_2;
+  late Topic dispatch_robot_3;
+  late Topic robot_1_arrived;
+  late Topic robot_2_arrived;
+  late Topic robot_3_arrived;
 
   @override
   void initState() {
@@ -39,8 +46,101 @@ class _AdminScreenState extends State<AdminScreen> {
         reconnectOnClose: true,
         queueLength: 10,
         queueSize: 10);
+    dispatch_robot_1 = Topic(
+        ros: ros,
+        name: '/robot1/confirm',
+        type: "std_msgs/Bool",
+        reconnectOnClose: true,
+        queueLength: 0,
+        queueSize: 1000);
+    dispatch_robot_2 = Topic(
+        ros: ros,
+        name: '/robot2/confirm',
+        type: "std_msgs/Bool",
+        reconnectOnClose: true,
+        queueLength: 0,
+        queueSize: 1000);
+    dispatch_robot_3 = Topic(
+        ros: ros,
+        name: '/robot3/confirm',
+        type: "std_msgs/Bool",
+        reconnectOnClose: true,
+        queueLength: 0,
+        queueSize: 1000);
+    robot_1_arrived = Topic(
+        ros: ros,
+        name: '/robot1/arrived',
+        type: "std_msgs/Bool",
+        reconnectOnClose: true,
+        queueLength: 10,
+        queueSize: 1000);
+    robot_2_arrived = Topic(
+        ros: ros,
+        name: '/robot2/arrived',
+        type: "std_msgs/Bool",
+        reconnectOnClose: true,
+        queueLength: 10,
+        queueSize: 1000);
+    robot_3_arrived = Topic(
+        ros: ros,
+        name: '/robot3/arrived',
+        type: "std_msgs/Bool",
+        reconnectOnClose: true,
+        queueLength: 10,
+        queueSize: 1000);
+
+    Timer.periodic(const Duration(milliseconds: 1000), (timer) async {
+      await robot_1_arrived.subscribe(subscribeHandler1);
+      await robot_2_arrived.subscribe(subscribeHandler2);
+      await robot_3_arrived.subscribe(subscribeHandler3);
+      setState(() {});
+    });
+
     super.initState();
     ros.connect();
+  }
+
+  bool robot1Arrived = false;
+  Future<void> subscribeHandler1(Map<String, dynamic> msg) async {
+    robot1Arrived = msg['data'];
+    print('data' + msg['data'].toString());
+    if (robot1Arrived) {
+      await AdminRepository(restaurantId: 'Restaurant A')
+          .updateRobotArrivedAtCustomer(robot: 1);
+      robot1Arrived = false;
+    }
+  }
+
+  bool robot2Arrived = false;
+  Future<void> subscribeHandler2(Map<String, dynamic> msg) async {
+    robot2Arrived = msg['data'];
+    if (robot2Arrived) {
+      await AdminRepository(restaurantId: 'Restaurant A')
+          .updateRobotArrivedAtCustomer(robot: 2);
+      robot2Arrived = false;
+    }
+  }
+
+  bool robot3Arrived = false;
+  Future<void> subscribeHandler3(Map<String, dynamic> msg) async {
+    robot3Arrived = msg['data'];
+    if (robot3Arrived) {
+      await AdminRepository(restaurantId: 'Restaurant A')
+          .updateRobotArrivedAtCustomer(robot: 3);
+      robot3Arrived = false;
+    }
+  }
+
+  Future<void> dispatchRobot1() async {
+    await dispatch_robot_1.publish({"data": true});
+  }
+
+  Future<void> dispatchRobot2() async {
+    await dispatch_robot_2.publish({"data": true});
+  }
+
+  Future<void> dispatchRobot3() async {
+    await dispatch_robot_3.publish({"data": true});
   }
 
   Future<void> sendBack(
@@ -50,10 +150,9 @@ class _AdminScreenState extends State<AdminScreen> {
     Map<String, dynamic> _jsonMsg = {
       "destination": destination,
       "start": start,
-      "meal": 'cleaning',
-      "time": time
+      "meal": 'cleaning,' + time.toString(),
     };
-    await item.publish({"data": _jsonMsg.toString()});
+    await item.publish({"data": json.encode(_jsonMsg)});
   }
 
   Future<String> _loadSession() async {
@@ -79,6 +178,13 @@ class _AdminScreenState extends State<AdminScreen> {
           if (snapshot.hasData) {
             return Scaffold(
               backgroundColor: Colors.grey[200],
+              floatingActionButton: FloatingActionButton(
+                onPressed: () async {
+                  await AdminRepository(restaurantId: 'Restaurant A')
+                      .updateRobotArrivedAtCustomer(robot: 1);
+                },
+                child: Icon(Icons.notifications_active),
+              ),
               body: Center(
                 child: AspectRatio(
                   aspectRatio: 1440 / 824,
@@ -210,14 +316,34 @@ class _AdminScreenState extends State<AdminScreen> {
     var sumAll = 0;
     await AdminRepository(restaurantId: 'Restaurant A')
         .getAllCurrentOrders()
-        .then((value) => value.forEach((key, value) {
+        .then((value) => value.forEach((key, value) async {
+              bool needUpdate = false;
               if (value != null) {
+                int? robotToDispatch = 0;
                 for (var element in value.items) {
-                  sumAll += element.amount;
+                  sumAll += 1;
+                  if (element.status == 'Eating' && element.robot != null) {
+                    robotToDispatch = element.robot;
+                    needUpdate = true;
+                  }
+                }
+                if (robotToDispatch == 1) {
+                  await dispatchRobot1();
+                }
+                if (robotToDispatch == 2) {
+                  await dispatchRobot2();
+                }
+                if (robotToDispatch == 3) {
+                  await dispatchRobot3();
+                }
+                if (needUpdate) {
+                  AdminRepository(restaurantId: 'Restaurant A')
+                      .updateOrder(value, key as int);
+                  needUpdate = false;
                 }
                 if (value.items
                     .any((element) => element.status == 'Send back')) {
-                  sendBack(
+                  await sendBack(
                       destination: 0,
                       start: value.items[0].table,
                       time: DateTime.now());

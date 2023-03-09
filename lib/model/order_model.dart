@@ -31,34 +31,37 @@ class OrderModel {
 
 class Item {
   int table;
-  int amount;
+  // int amount;
   String meal;
   String status;
   DateTime time;
   int price;
-  List<dynamic>? tray;
+  int? tray;
+  int? robot;
 
-  Item(this.table, this.amount, this.meal, this.status, this.time, this.price,
-      this.tray);
+  Item(this.table, this.meal, this.status, this.time, this.price, this.tray,
+      this.robot);
 
   // convert Json to an exercise object
   factory Item.fromJson(Map<String, dynamic> json) {
     return Item(
         json['Table'] as int,
-        json['Amount'] as int,
+        // json['Amount'] as int,
         json['Meal'].toString().trim(),
         json['Status'].toString().trim(),
         json['Timestamp'].toDate(),
         json['Price'] as int,
-        json['tray'] as List<dynamic>?);
+        json['tray'] as int?,
+        json['robot'] as int?);
   }
   Map<String, dynamic> toJson() => <String, dynamic>{
         'Table': table,
-        'Amount': amount,
+        // 'Amount': amount,
         'Meal': meal,
         'Status': status,
         'Timestamp': time,
         'Price': price,
-        'tray': tray
+        'tray': tray,
+        'robot': robot
       };
 }

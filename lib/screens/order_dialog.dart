@@ -106,25 +106,28 @@ class _OrderDialogState extends State<OrderDialog> {
                                       orderAmount = int.parse(
                                           value.replaceAll(',', '')))),
                               SizedBox(
-                                height: 8,
+                                height: 15,
                               ),
                               ElevatedButton(
-                                onPressed: (() {
+                                onPressed: (() async {
                                   if (orderAmount != 0) {
                                     item = Item(
                                         widget.table,
-                                        orderAmount,
+                                        // orderAmount,
                                         widget.foodItem['meal'],
                                         'Pending',
                                         DateTime.now(),
-                                        widget.foodItem['price'] * orderAmount,
+                                        widget.foodItem['price'],
+                                        null,
                                         null);
-                                    OrderRepository(
-                                            id: widget.id,
-                                            restaurantId: widget.restaurantId,
-                                            table: widget.table,
-                                            isLogin: widget.isLogin)
-                                        .addOrder(item: item);
+                                    for (int i = 0; i < orderAmount; i++) {
+                                      await OrderRepository(
+                                              id: widget.id,
+                                              restaurantId: widget.restaurantId,
+                                              table: widget.table,
+                                              isLogin: widget.isLogin)
+                                          .addOrder(item: item);
+                                    }
                                   }
                                 }),
                                 child: Container(

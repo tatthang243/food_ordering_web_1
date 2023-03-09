@@ -20,7 +20,7 @@ class AdminRepository {
   }
 
   Map<int, Stream<dynamic>> getDocumentSnapshot() {
-    numOfTables = 6;
+    numOfTables = 3;
     for (var table = 1; table < numOfTables + 1; table++) {
       allStreamOrders[table] = _docRef
           .collection('table' + table.toString())
@@ -46,10 +46,50 @@ class AdminRepository {
     return _docRef.snapshots().map((event) => event.data());
   }
 
-  Future<void> updateItem(
+  Future<void> updateRobotArrivedAtCustomer({required int robot}) async {
+    numOfTables = 3;
+    for (var table = 1; table < numOfTables + 1; table++) {
+      bool needUpdate = false;
+      var tempId = await _docRef
+          .collection('table' + table.toString())
+          .where('closed', isEqualTo: false)
+          .limit(1)
+          .get(
+            GetOptions(source: Source.serverAndCache),
+          )
+          .then((value) => value.docs.first.id);
+      var tempOrderJson = await _docRef
+          .collection('table' + table.toString())
+          .where('closed', isEqualTo: false)
+          .limit(1)
+          .get(
+            GetOptions(source: Source.serverAndCache),
+          )
+          .then((value) => value.docs.map((e) => e.data()));
+      // print(tempOrderJson.first);
+      var tempOrder = OrderModel.fromJson(tempOrderJson.first);
+      for (var element in tempOrder.items) {
+        if (element.status == 'Delivering' && element.robot == robot) {
+          element.status = 'Arrived';
+          needUpdate = true;
+          // print(tempOrder.toJson());
+        }
+      }
+
+      if (needUpdate) {
+        await _docRef
+            .collection('table' + table.toString())
+            .doc(tempId)
+            .update(tempOrder.toJson());
+      }
+    }
+  }
+
+  Future<void> updateItemTrayAndRobot(
       {required int table,
       required DateTime time,
-      required List<dynamic> tray}) async {
+      required int tray,
+      required int robot}) async {
     var tempId = await _docRef
         .collection('table' + table.toString())
         .where('closed', isEqualTo: false)
@@ -64,14 +104,36 @@ class AdminRepository {
             );
     var tempOrder = OrderModel.fromJson(doc.data()!);
     for (var item in tempOrder.items) {
-      if (item.time == time) {
+      if (item.time == time &&
+          item.tray == null &&
+          item.status == 'Ready' &&
+          item.robot == null) {
         item.tray = tray;
+        item.robot = robot;
+        item.status = 'Delivering';
+        break;
       }
     }
     _docRef
         .collection('table' + table.toString())
         .doc(tempId)
         .update(tempOrder.toJson());
+  }
+
+  Future<void> updateOrder(OrderModel order, int table) async {
+    var tempId = await _docRef
+        .collection('table' + table.toString())
+        .where('closed', isEqualTo: false)
+        .limit(1)
+        .get(
+          GetOptions(source: Source.serverAndCache),
+        )
+        .then((value) => value.docs.first.id);
+
+    await _docRef
+        .collection('table' + table.toString())
+        .doc(tempId)
+        .update(order.toJson());
   }
 
   Future<Map<dynamic, OrderModel?>> getAllCurrentOrders() async {

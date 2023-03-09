@@ -26,7 +26,6 @@ class _CartScreenState extends State<CartScreen> {
   int table = 0;
   late String restaurantId;
   late String id;
-  List<Map<String, dynamic>> currentOrders = [];
 
   @override
   void initState() {
@@ -61,17 +60,26 @@ class _CartScreenState extends State<CartScreen> {
                 child: Builder(
                   builder: (context) {
                     var orders = Provider.of<OrderModel>(context);
+                    List<Map<String, dynamic>> currentOrders = [];
+                    List<dynamic> ble = [];
+                    int i = 0;
                     for (var order in orders.items) {
-                      var results = map.where(
-                          (element) => element.containsValue(order.meal));
-                      for (var result in results) {
-                        result['amount'] = order.amount;
-                        result['status'] = order.status;
-                        result['time'] = order.time;
-                        result['price'] = order.price;
-                      }
-                      currentOrders = [...currentOrders, ...results];
+                      // print(order.status);
+                      Map<String, dynamic> tempResult;
+                      tempResult = map
+                          .where((element) => element.containsValue(order.meal))
+                          .first;
+                      var item = {
+                        'meal': order.meal,
+                        'price': order.price,
+                        'description': tempResult['description'],
+                        'picture': tempResult['picture'],
+                        'status': order.status,
+                        'time': order.time
+                      };
+                      currentOrders.add(item);
                     }
+                    print(currentOrders);
                     return Scaffold(
                       appBar: AppBar(
                           backgroundColor: Colors.black,
@@ -169,7 +177,7 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   OrderItem({required Map<String, dynamic> foodItem}) {
-    print(foodItem);
+    // print(foodItem);
     return Container(
       height: 100,
       width: double.infinity,
@@ -183,7 +191,10 @@ class _CartScreenState extends State<CartScreen> {
               child: Container(
                 decoration:
                     BoxDecoration(borderRadius: BorderRadius.circular(10)),
-                child: Image.network(foodItem['picture']),
+                child: Image.network(
+                  foodItem['picture'],
+                  fit: BoxFit.cover,
+                ),
               )),
           const SizedBox(
             width: 15,
@@ -195,31 +206,56 @@ class _CartScreenState extends State<CartScreen> {
               children: [
                 Text(
                   foodItem['meal'],
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(
-                  height: 10,
+                // Text(
+                //   'Amount: ' + foodItem['amount'].toString(),
+                //   style: TextStyle(
+                //     fontSize: 10,
+                //     fontStyle: FontStyle.italic,
+                //   ),
+                // ),
+                Text(
+                  'Status: ' + foodItem['status'].toString(),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Amount: ' +
-                          foodItem['amount'].toString() +
-                          "\t Status: " +
-                          foodItem['status'].toString() +
-                          '\Time: ' +
-                          foodItem['time'].toString(),
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontStyle: FontStyle.italic,
-                      ),
-                      maxLines: 2,
-                    ),
-                    Text('Price: ' + foodItem['price'].toString()),
-                  ],
-                )
+                Text(
+                  'Time: ' + foodItem['time'].toString(),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+                Text(
+                  'Price: ' + foodItem['price'].toString(),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.start,
+                //   crossAxisAlignment: CrossAxisAlignment.center,
+                //   children: [
+                //     Text(
+                //       'Amount: ' +
+                //           foodItem['amount'].toString() +
+                //           "\t Status: " +
+                //           foodItem['status'].toString() +
+                //           '\Time: ' +
+                //           foodItem['time'].toString(),
+                //       style: TextStyle(
+                //         fontSize: 10,
+                //         fontStyle: FontStyle.italic,
+                //       ),
+                //       maxLines: 2,
+                //     ),
+                //     Text('Price: ' + foodItem['price'].toString()),
+                //   ],
+                // )
               ],
             ),
           )

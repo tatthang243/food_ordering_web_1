@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -44,13 +45,12 @@ class _TableClassState extends State<TableClass> {
     Map<String, dynamic> _jsonMsg = {
       "destination": widget.tableNum,
       "start": 0,
-      "meal": itemToBePublished.meal,
+      "meal": itemToBePublished.meal + ',' + itemToBePublished.time.toString(),
       // "amount": itemToBePublished.amount,
-      "time": itemToBePublished.time
     };
-    for (int i = 0; i < itemToBePublished.amount; i++) {
-      await item.publish({"data": _jsonMsg.toString()});
-    }
+    // for (int i = 0; i < itemToBePublished.amount; i++) {
+    await item.publish({"data": json.encode(_jsonMsg)});
+    // }
   }
 
   @override
@@ -69,17 +69,18 @@ class _TableClassState extends State<TableClass> {
         var order = Provider.of<OrderModel>(context);
         for (var item in order.items) {
           if (item.status == "Preparing") {
-            tableStatus["Preparing"] = tableStatus["Preparing"]! + item.amount;
-          } else if (item.status == "Delivering" || item.status == "Ready") {
-            tableStatus["Delivering"] =
-                tableStatus["Delivering"]! + item.amount;
+            tableStatus["Preparing"] = tableStatus["Preparing"]! + 1;
+          } else if (item.status == "Delivering" ||
+              item.status == "Ready" ||
+              item.status == "Arrived") {
+            tableStatus["Delivering"] = tableStatus["Delivering"]! + 1;
           } else if (item.status == "Eating" ||
               item.status == "Finished" ||
               item.status == "Send back" ||
               item.status == "Received back") {
-            tableStatus["Eating"] = tableStatus["Eating"]! + item.amount;
+            tableStatus["Eating"] = tableStatus["Eating"]! + 1;
           } else if (item.status == "Pending") {
-            tableStatus["Pending"] = tableStatus["Pending"]! + item.amount;
+            tableStatus["Pending"] = tableStatus["Pending"]! + 1;
           } else {
             continue;
           }
@@ -186,6 +187,10 @@ class _TableClassState extends State<TableClass> {
               initialData: order,
               child: Builder(builder: (context) {
                 var order = Provider.of<OrderModel>(context);
+                var sumOrder = 0;
+                for (var item in order.items) {
+                  sumOrder += item.price;
+                }
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,14 +221,14 @@ class _TableClassState extends State<TableClass> {
                                         order.items[index].meal,
                                         style: TextStyle(fontSize: 16),
                                       )),
-                                  Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        'Amount: ' +
-                                            order.items[index].amount
-                                                .toString(),
-                                        style: TextStyle(fontSize: 16),
-                                      )),
+                                  // Expanded(
+                                  //     flex: 2,
+                                  //     child: Text(
+                                  //       'Amount: ' +
+                                  //           order.items[index].amount
+                                  //               .toString(),
+                                  //       style: TextStyle(fontSize: 16),
+                                  //     )),
                                   Expanded(
                                       flex: 2,
                                       child: Text(
@@ -302,9 +307,9 @@ class _TableClassState extends State<TableClass> {
                                                     restaurantId:
                                                         'Restaurant A')
                                                 .updateOrder(order: order);
-                                            await publishOrder(
-                                                order.items[index]);
                                           }
+                                          await publishOrder(
+                                              order.items[index]);
                                         });
                                       },
                                       child: Container(
@@ -351,6 +356,53 @@ class _TableClassState extends State<TableClass> {
                         ),
                       ),
                     ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 30),
+                      height: 50,
+                      color: Colors.white,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            'Sum :' + sumOrder.toString(),
+                            style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                fontStyle: FontStyle.italic),
+                          ),
+                          SizedBox(
+                            width: 30,
+                          ),
+                          ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                primary: Colors.black,
+                              ),
+                              onPressed: () {
+                                setState(() async {
+                                  // _isPressed = true;
+                                  order.closed = true;
+                                  await OrderRepository(
+                                          id: order.id,
+                                          table: widget.tableNum,
+                                          isLogin: true,
+                                          restaurantId: 'Restaurant A')
+                                      .updateOrder(order: order);
+                                });
+                              },
+                              child: Container(
+                                height: 30,
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'Check out',
+                                  style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ))
+                        ],
+                      ),
+                    )
                   ],
                 );
               }),
