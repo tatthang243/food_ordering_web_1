@@ -163,10 +163,10 @@ class OrderScreenState extends State<OrderScreen> {
                             if (order.items.any((element) =>
                                 element.status == "Arrived" ||
                                 element.status == "Take back"))
-                              Expanded(
-                                child: Container(
-                                  color: Colors.grey[400]?.withOpacity(0.9),
-                                ),
+                              Container(
+                                height: double.infinity,
+                                width: double.infinity,
+                                color: Colors.grey[400]?.withOpacity(0.9),
                               ),
                             if (order.items.any(
                                 (element) => element.status == "Take back"))
@@ -324,7 +324,7 @@ class _FoodItemState extends State<FoodItem> {
                     child: Container(
                       decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10)),
-                      child: Image.network(widget.foodItem['picture'],
+                      child: Image.asset(widget.foodItem['picture'],
                           fit: BoxFit.cover),
                     )),
                 const SizedBox(

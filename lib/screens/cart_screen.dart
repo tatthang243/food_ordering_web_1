@@ -191,7 +191,7 @@ class _CartScreenState extends State<CartScreen> {
               child: Container(
                 decoration:
                     BoxDecoration(borderRadius: BorderRadius.circular(10)),
-                child: Image.network(
+                child: Image.asset(
                   foodItem['picture'],
                   fit: BoxFit.cover,
                 ),

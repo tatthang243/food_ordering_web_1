@@ -72,7 +72,15 @@ flutter:
     - resources/image 4.png
     - resources/robot 1.jpg
     - resources/robot 2.jpg
-    - resources/robot 3.jpg    
+    - resources/robot 3.jpg
+    - resources/Fried chicken.jpg
+    - resources/Fried pork.png
+    - resources/Pizza.jpg
+    - resources/Roasted chicken.jpg
+    - resources/Roasted pig.jpg
+    - resources/Steak.jpg
+    - resources/Steamed chicken.jpg
+    
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

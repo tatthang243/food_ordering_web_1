@@ -74,6 +74,11 @@ class AdminRepository {
           needUpdate = true;
           // print(tempOrder.toJson());
         }
+        // if (element.status == 'Send back' && element.robot == robot) {
+        //   element.status = 'Arrived';
+        //   needUpdate = true;
+        //   // print(tempOrder.toJson());
+        // }
       }
 
       if (needUpdate) {

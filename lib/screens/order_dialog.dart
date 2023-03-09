@@ -64,7 +64,7 @@ class _OrderDialogState extends State<OrderDialog> {
                               AspectRatio(
                                 aspectRatio: 16 / 9,
                                 child: Container(
-                                  child: Image.network(
+                                  child: Image.asset(
                                     widget.foodItem['picture'],
                                     fit: BoxFit.fitWidth,
                                   ),

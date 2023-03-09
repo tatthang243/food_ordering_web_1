@@ -19,6 +19,7 @@ class _RobotWidgetState extends State<RobotWidget> {
   late Topic task;
   late Topic dispatch;
   bool newValue = false;
+  late Topic robotStatus;
 
   @override
   void initState() {
@@ -37,12 +38,20 @@ class _RobotWidgetState extends State<RobotWidget> {
         reconnectOnClose: true,
         queueLength: 0,
         queueSize: 1000);
+
+    robotStatus = Topic(
+        ros: ros,
+        name: '/robot${widget.robot}/status',
+        type: "std_msgs/String",
+        reconnectOnClose: true,
+        queueLength: 0,
+        queueSize: 1000);
     super.initState();
     ros.connect();
 
     Timer.periodic(const Duration(milliseconds: 1000), (timer) async {
-      await task.subscribe(subscribeHandler);
-      // await task2.subscribe(subscribeHandler2);
+      await task.subscribe(subscribeHandler1);
+      await robotStatus.subscribe(subscribeHandler2);
       // await task3.subscribe(subscribeHandler3);
       setState(() {});
     });
@@ -55,7 +64,7 @@ class _RobotWidgetState extends State<RobotWidget> {
   String msgReceived = '';
   var jsonTask = [];
 
-  Future<void> subscribeHandler(Map<String, dynamic> msg) async {
+  Future<void> subscribeHandler1(Map<String, dynamic> msg) async {
     msgReceived = msg['data'].toString();
     // var jsonTask = json.decode(msgReceived1);
     // print('checking json');
@@ -68,6 +77,11 @@ class _RobotWidgetState extends State<RobotWidget> {
     // print("at json " + json.decode(msgReceived1)[0]['meal']);
     print(json.decode(msgReceived));
     newValue = true;
+  }
+
+  String statusReceived = '';
+  Future<void> subscribeHandler2(Map<String, dynamic> msg) async {
+    statusReceived = msg['data'].toString();
   }
 
   var tempTask = [
@@ -123,7 +137,7 @@ class _RobotWidgetState extends State<RobotWidget> {
                 width: 5,
               ),
               Text(
-                'Trạng thái robot',
+                statusReceived == '' ? 'Trạng thái chờ' : statusReceived,
                 style: TextStyle(fontSize: 16),
               ),
             ],
