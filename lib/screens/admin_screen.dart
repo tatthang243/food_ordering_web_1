@@ -38,7 +38,8 @@ class _AdminScreenState extends State<AdminScreen> {
 
   @override
   void initState() {
-    ros = Ros(url: 'ws://localhost:9090');
+    ros = Ros(url: 'ws://192.168.0.100:9090');
+    // ros = Ros(url: 'ws://localhost:9090');
     item = Topic(
         ros: ros,
         name: '/item',
@@ -48,87 +49,99 @@ class _AdminScreenState extends State<AdminScreen> {
         queueSize: 10);
     dispatch_robot_1 = Topic(
         ros: ros,
-        name: '/robot1/confirm',
+        name: '/robot1/good_confirmation',
         type: "std_msgs/Bool",
         reconnectOnClose: true,
         queueLength: 0,
         queueSize: 1000);
     dispatch_robot_2 = Topic(
         ros: ros,
-        name: '/robot2/confirm',
+        name: '/robot2/good_confirmation',
         type: "std_msgs/Bool",
         reconnectOnClose: true,
         queueLength: 0,
         queueSize: 1000);
     dispatch_robot_3 = Topic(
         ros: ros,
-        name: '/robot3/confirm',
+        name: '/robot3/good_confirmation',
         type: "std_msgs/Bool",
         reconnectOnClose: true,
         queueLength: 0,
         queueSize: 1000);
     robot_1_arrived = Topic(
         ros: ros,
-        name: '/robot1/arrived',
+        name: '/robot1/arrived_confirmation',
         type: "std_msgs/Bool",
         reconnectOnClose: true,
-        queueLength: 10,
+        queueLength: 0,
         queueSize: 1000);
     robot_2_arrived = Topic(
         ros: ros,
-        name: '/robot2/arrived',
+        name: '/robot2/arrived_confirmation',
         type: "std_msgs/Bool",
         reconnectOnClose: true,
-        queueLength: 10,
+        queueLength: 0,
         queueSize: 1000);
     robot_3_arrived = Topic(
         ros: ros,
-        name: '/robot3/arrived',
+        name: '/robot3/arrived_confirmation',
         type: "std_msgs/Bool",
         reconnectOnClose: true,
-        queueLength: 10,
+        queueLength: 0,
         queueSize: 1000);
 
     Timer.periodic(const Duration(milliseconds: 1000), (timer) async {
       await robot_1_arrived.subscribe(subscribeHandler1);
       await robot_2_arrived.subscribe(subscribeHandler2);
       await robot_3_arrived.subscribe(subscribeHandler3);
-      setState(() {});
     });
 
     super.initState();
     ros.connect();
   }
 
+  bool robot1ArrivedCleaning = false;
   bool robot1Arrived = false;
   Future<void> subscribeHandler1(Map<String, dynamic> msg) async {
     robot1Arrived = msg['data'];
-    print('data' + msg['data'].toString());
+    // print('data' + msg['data']);
     if (robot1Arrived) {
-      await AdminRepository(restaurantId: 'Restaurant A')
-          .updateRobotArrivedAtCustomer(robot: 1);
+      robot1ArrivedCleaning =
+          await AdminRepository(restaurantId: 'Restaurant A')
+              .updateRobotArrivedAtCustomer(robot: 1);
       robot1Arrived = false;
     }
+
+    setState(() {});
   }
 
+  bool robot2ArrivedCleaning = false;
   bool robot2Arrived = false;
   Future<void> subscribeHandler2(Map<String, dynamic> msg) async {
     robot2Arrived = msg['data'];
+    // print('data' + msg['data']);
     if (robot2Arrived) {
-      await AdminRepository(restaurantId: 'Restaurant A')
-          .updateRobotArrivedAtCustomer(robot: 2);
+      robot2ArrivedCleaning =
+          await AdminRepository(restaurantId: 'Restaurant A')
+              .updateRobotArrivedAtCustomer(robot: 2);
       robot2Arrived = false;
     }
+
+    setState(() {});
   }
 
+  bool robot3ArrivedCleaning = false;
   bool robot3Arrived = false;
   Future<void> subscribeHandler3(Map<String, dynamic> msg) async {
     robot3Arrived = msg['data'];
+    // print('data type:' + msg['data'].runtimeType.toString());
     if (robot3Arrived) {
-      await AdminRepository(restaurantId: 'Restaurant A')
-          .updateRobotArrivedAtCustomer(robot: 3);
+      robot3ArrivedCleaning =
+          await AdminRepository(restaurantId: 'Restaurant A')
+              .updateRobotArrivedAtCustomer(robot: 3);
       robot3Arrived = false;
     }
+    setState(() {});
   }
 
   Future<void> dispatchRobot1() async {
@@ -195,69 +208,202 @@ class _AdminScreenState extends State<AdminScreen> {
                       width: 1440,
                       padding:
                           EdgeInsets.symmetric(horizontal: 74, vertical: 54),
-                      child: Row(
-                        children: [
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                  width: 334,
-                                  height: 558,
-                                  decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(20)),
-                                  padding: EdgeInsets.only(top: 34),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Padding(
-                                        padding:
-                                            const EdgeInsets.only(left: 24),
-                                        child: Text(
-                                          'BÀN',
-                                          style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold),
+                      child: Stack(alignment: Alignment.center, children: [
+                        Row(
+                          children: [
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                    width: 334,
+                                    height: 558,
+                                    decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius:
+                                            BorderRadius.circular(20)),
+                                    padding: EdgeInsets.only(top: 34),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.only(left: 24),
+                                          child: Text(
+                                            'BÀN',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          height: 36,
+                                        ),
+                                        Divider(
+                                          height: 1,
+                                          thickness: 1,
+                                        ),
+                                        for (var tableNum = 1;
+                                            tableNum < 6 + 1;
+                                            tableNum++)
+                                          Column(
+                                            children: [
+                                              AspectRatio(
+                                                  aspectRatio: 264 / 53,
+                                                  child: TableClass(tableNum)),
+                                              Divider(
+                                                height: 1,
+                                                thickness: 1,
+                                              )
+                                            ],
+                                          )
+                                      ],
+                                    )),
+                                SizedBox(
+                                  height: 38,
+                                ),
+                                SumOfAllOrders()
+                              ],
+                            ),
+                            SizedBox(
+                              width: 44,
+                            ),
+                            Container(
+                                width: 914, child: RobotManagementWidget())
+                          ],
+                        ),
+                        if (robot1ArrivedCleaning ||
+                            robot2ArrivedCleaning ||
+                            robot3ArrivedCleaning)
+                          Container(
+                            height: double.infinity,
+                            width: double.infinity,
+                            color: Colors.grey[200]?.withOpacity(0.9),
+                          ),
+                        if (robot1ArrivedCleaning)
+                          Container(
+                            width: 280,
+                            height: 150,
+                            padding: EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(5)),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                    'Vui lòng lấy bát đĩa bẩn trên khay của robot 1 và ấn "Đã lấy"'),
+                                ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        primary: Colors.green),
+                                    onPressed: () async {
+                                      await AdminRepository(
+                                              restaurantId: 'Restaurant A')
+                                          .updateRobotArrivedWithCleaningAtOwner(
+                                              robot: 1);
+                                      await dispatchRobot1();
+                                      setState(() {
+                                        robot1ArrivedCleaning = false;
+                                      });
+                                    },
+                                    child: Container(
+                                      height: 46,
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        'Đã lấy',
+                                        style: TextStyle(
+                                          fontSize: 16,
                                         ),
                                       ),
-                                      SizedBox(
-                                        height: 36,
-                                      ),
-                                      Divider(
-                                        height: 1,
-                                        thickness: 1,
-                                      ),
-                                      for (var tableNum = 1;
-                                          tableNum < 6 + 1;
-                                          tableNum++)
-                                        Column(
-                                          children: [
-                                            AspectRatio(
-                                                aspectRatio: 264 / 53,
-                                                child: TableClass(tableNum)),
-                                            Divider(
-                                              height: 1,
-                                              thickness: 1,
-                                            )
-                                          ],
-                                        )
-                                    ],
-                                  )),
-                              SizedBox(
-                                height: 38,
-                              ),
-                              SumOfAllOrders()
-                            ],
+                                    )),
+                              ],
+                            ),
                           ),
-                          SizedBox(
-                            width: 44,
+                        if (robot2ArrivedCleaning)
+                          Container(
+                            width: 280,
+                            height: 150,
+                            padding: EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(5)),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                    'Vui lòng lấy bát đĩa bẩn trên khay của robot 2 và ấn "Đã lấy"'),
+                                ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        primary: Colors.green),
+                                    onPressed: () async {
+                                      await AdminRepository(
+                                              restaurantId: 'Restaurant A')
+                                          .updateRobotArrivedWithCleaningAtOwner(
+                                              robot: 2);
+                                      await dispatchRobot2();
+                                      setState(() {
+                                        robot2ArrivedCleaning = false;
+                                      });
+                                    },
+                                    child: Container(
+                                      height: 46,
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        'Đã lấy',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    )),
+                              ],
+                            ),
                           ),
-                          Container(width: 914, child: RobotManagementWidget())
-                        ],
-                      ),
+                        if (robot3ArrivedCleaning)
+                          Container(
+                            width: 280,
+                            height: 150,
+                            padding: EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(5)),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                    'Vui lòng lấy bát đĩa bẩn trên khay của robot 3 và ấn "Đã lấy"'),
+                                ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        primary: Colors.green),
+                                    onPressed: () async {
+                                      await AdminRepository(
+                                              restaurantId: 'Restaurant A')
+                                          .updateRobotArrivedWithCleaningAtOwner(
+                                              robot: 3);
+                                      await dispatchRobot3();
+                                      setState(() {
+                                        robot3ArrivedCleaning = false;
+                                      });
+                                    },
+                                    child: Container(
+                                      height: 46,
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        'Đã lấy',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    )),
+                              ],
+                            ),
+                          ),
+                      ]),
                     ),
                   ),
                 ),
@@ -312,6 +458,24 @@ class _AdminScreenState extends State<AdminScreen> {
         }));
   }
 
+  Future<void> showAlert() async {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("Test"),
+            content: const Text("This is a test dialog"),
+            actions: [
+              ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text("OK"))
+            ],
+          );
+        });
+  }
+
   Future<int> sumAll() async {
     var sumAll = 0;
     await AdminRepository(restaurantId: 'Restaurant A')
@@ -324,8 +488,16 @@ class _AdminScreenState extends State<AdminScreen> {
                   sumAll += 1;
                   if (element.status == 'Eating' && element.robot != null) {
                     robotToDispatch = element.robot;
+                    element.robot = null;
                     needUpdate = true;
                   }
+                  // if (element.status == 'Arrived back' &&
+                  //     element.robot != null) {
+                  //   robotToDispatch = element.robot;
+                  //   element.status = 'Taken back';
+                  //   element.robot = null;
+                  //   needUpdate = true;
+                  // }
                 }
                 if (robotToDispatch == 1) {
                   await dispatchRobot1();

@@ -28,7 +28,7 @@ class OrderScreenState extends State<OrderScreen> {
   int table = 0;
   late String restaurantId;
   late String id;
-
+  bool cleanUpEnable = false;
   @override
   void initState() {
     // TODO: implement initState
@@ -64,7 +64,7 @@ class OrderScreenState extends State<OrderScreen> {
                   var order = Provider.of<OrderModel>(context);
                   List allTrays = [];
                   String stringTray = '';
-                  bool cleanUpEnable = false;
+
                   if (order.items
                       .any((element) => element.status == "Eating")) {
                     cleanUpEnable = true;
@@ -87,23 +87,23 @@ class OrderScreenState extends State<OrderScreen> {
                             backgroundColor: cleanUpEnable
                                 ? Colors.green[300]
                                 : Colors.grey[400],
-                            onPressed: () {
-                              setState(() async {
-                                if (cleanUpEnable) {
-                                  for (var item in order.items) {
-                                    if (item.status == "Eating") {
-                                      item.status = "Send back";
-                                    }
+                            onPressed: () async {
+                              if (cleanUpEnable) {
+                                for (var item in order.items) {
+                                  if (item.status == "Eating") {
+                                    item.status = "Send back";
                                   }
-                                  await OrderRepository(
-                                          id: id,
-                                          table: table,
-                                          isLogin: true,
-                                          restaurantId: 'Restaurant A')
-                                      .updateOrder(order: order);
-                                  cleanUpEnable = false;
                                 }
-                              });
+                                await OrderRepository(
+                                        id: id,
+                                        table: table,
+                                        isLogin: true,
+                                        restaurantId: 'Restaurant A')
+                                    .updateOrder(order: order);
+                                cleanUpEnable = false;
+                                setState(() {});
+                              }
+                              ;
                             },
                             child: Icon(Icons.notifications_active),
                           ),

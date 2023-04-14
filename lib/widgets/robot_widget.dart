@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:food_ordering_web_1/repo/admin_repo.dart';
@@ -23,17 +22,19 @@ class _RobotWidgetState extends State<RobotWidget> {
 
   @override
   void initState() {
-    ros = Ros(url: 'ws://localhost:9090');
+    ros = Ros(url: 'ws://192.168.0.100:9090');
+    // ros = Ros(url: 'ws://localhost:9090');
+
     task = Topic(
         ros: ros,
-        name: '/task${widget.robot}',
+        name: '/robot${widget.robot}/task_info',
         type: "std_msgs/String",
         reconnectOnClose: true,
         queueLength: 0,
         queueSize: 1000);
     dispatch = Topic(
         ros: ros,
-        name: '/robot${widget.robot}/confirm',
+        name: '/robot${widget.robot}/good_confirmation',
         type: "std_msgs/Bool",
         reconnectOnClose: true,
         queueLength: 0,
@@ -62,21 +63,36 @@ class _RobotWidgetState extends State<RobotWidget> {
   }
 
   String msgReceived = '';
-  var jsonTask = [];
+  List<Map<String, dynamic>> jsonTask = [];
 
   Future<void> subscribeHandler1(Map<String, dynamic> msg) async {
     msgReceived = msg['data'].toString();
+    print('msg: ' + msgReceived);
+    newValue = true;
     // var jsonTask = json.decode(msgReceived1);
     // print('checking json');
     // print(jsonTask[0]['meal']);
     // setState(() {});
     // json.encode(jsonTask);
-    try {
-      jsonTask = json.decode(msgReceived);
-    } catch (e) {}
-    // print("at json " + json.decode(msgReceived1)[0]['meal']);
-    print(json.decode(msgReceived));
-    newValue = true;
+    // try {
+    //   jsonTask = json.decode(msgReceived);
+    // } catch (e) {}
+    // // print("at json " + json.decode(msgReceived1)[0]['meal']);
+    // print(json.decode(msgReceived));
+    jsonTask = [];
+    for (var item in msgReceived.split(';')) {
+      if (item.length > 5) {
+        item = item.trim();
+        List<String> field = item.split(',');
+        Map<String, dynamic> tempItem = {};
+        tempItem['meal'] = field[1].trim();
+        tempItem['time'] = field[2].trim();
+        tempItem['table'] = int.tryParse(field[0].trim());
+        tempItem['tray'] = int.tryParse(field[3].trim());
+        jsonTask.add(tempItem);
+      }
+    }
+    print("task: " + jsonTask.toString());
   }
 
   String statusReceived = '';
@@ -209,7 +225,7 @@ class _RobotWidgetState extends State<RobotWidget> {
               style: ElevatedButton.styleFrom(
                   primary: newValue ? Colors.black : Colors.grey[400]),
               onPressed: () async {
-                if (newValue) {
+                if (newValue == true) {
                   if (jsonTask.any((element) => element['tray'] == null)) {
                     showDialog(
                         context: context,
@@ -221,47 +237,25 @@ class _RobotWidgetState extends State<RobotWidget> {
                                 alignment: Alignment.center,
                                 child: Text('select all trays'))));
                   } else {
-                    // print(jsonTask);
-                    // var timeList = [];
-                    // for (var element in jsonTask) {
-                    //   if (!timeList.contains(element['time'])) {
-                    //     timeList.add(element['time']);
-                    //   }
-                    // }
-                    // for (var tempTime in timeList) {
-                    //   int tray = 0;
-                    //   int tempTable = 0;
-                    //   for (var tempItem in jsonTask
-                    //       .where((element) => element['time'] == tempTime)) {
-                    //     tray = tempItem['tray'] as int;
-                    //     // print(tempItem);
-                    //     tempTable = tempItem['table'] as int;
-                    //   }
-                    //   print('table: ' +
-                    //       tempTable.toString() +
-                    //       'time: ' +
-                    //       tempTime +
-                    //       '\t' +
-                    //       tray.toString());
                     for (var element in jsonTask) {
-                      print('table: ' +
-                          element['table'].toString() +
-                          'time: ' +
-                          element['time'] +
-                          '\t' +
-                          element['tray'].toString());
+                      // print('table: ' +
+                      //     element['table'].toString() +
+                      //     'time: ' +
+                      //     element['time'] +
+                      //     '\t' +
+                      //     element['tray'].toString());
                       await AdminRepository(restaurantId: 'Restaurant A')
                           .updateItemTrayAndRobot(
                               table: element['table'],
-                              time: DateTime.parse(element['time']),
+                              time: DateTime.parse(element['time'].toString()),
                               tray: element['tray'],
                               robot: widget.robot);
-                      setState(() {
-                        newValue = false;
-                      });
                     }
+                    await dispatchRobot();
+                    // setState(()  {
+                    newValue = false;
+                    // });
                   }
-                  await dispatchRobot();
                 }
               },
               child: Container(

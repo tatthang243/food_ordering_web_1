@@ -22,7 +22,8 @@ class _TableClassState extends State<TableClass> {
 
   @override
   void initState() {
-    ros = Ros(url: 'ws://localhost:9090');
+    ros = Ros(url: 'ws://192.168.0.100:9090');
+    // ros = Ros(url: 'ws://localhost:9090');
     item = Topic(
         ros: ros,
         name: '/item',

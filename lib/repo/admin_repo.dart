@@ -46,10 +46,13 @@ class AdminRepository {
     return _docRef.snapshots().map((event) => event.data());
   }
 
-  Future<void> updateRobotArrivedAtCustomer({required int robot}) async {
+  Future<bool> updateRobotArrivedAtCustomer({required int robot}) async {
+    bool cleaning = false;
     numOfTables = 3;
-    for (var table = 1; table < numOfTables + 1; table++) {
+    for (int table = 1; table < numOfTables + 1; table++) {
+      print(table.toString());
       bool needUpdate = false;
+      bool skip = false;
       var tempId = await _docRef
           .collection('table' + table.toString())
           .where('closed', isEqualTo: false)
@@ -57,35 +60,104 @@ class AdminRepository {
           .get(
             GetOptions(source: Source.serverAndCache),
           )
-          .then((value) => value.docs.first.id);
-      var tempOrderJson = await _docRef
+          .then((value) => value.docs.first.id)
+          .catchError((error) {
+        skip = true;
+      });
+      if (!skip) {
+        var tempOrderJson = await _docRef
+            .collection('table' + table.toString())
+            .where('closed', isEqualTo: false)
+            // .limit(1)
+            .get(
+              GetOptions(source: Source.serverAndCache),
+            )
+            .then((value) => value.docs.map((e) => e.data()));
+        print('table: ' +
+            table.toString() +
+            ' ' +
+            tempOrderJson.first.toString());
+        var tempOrder = OrderModel.fromJson(tempOrderJson.first);
+        for (var element in tempOrder.items) {
+          if (element.status == 'Delivering' && element.robot == robot) {
+            //came at customer with orders
+            element.status = 'Arrived';
+            needUpdate = true;
+            // print(tempOrder.toJson());
+          } else if (element.status == 'Send back') {
+            //came at customers to take back meals
+            element.status = 'Take back';
+            element.robot = robot;
+            needUpdate = true;
+            // print(tempOrder.toJson());
+          } else if (element.status == 'Taking back' &&
+              element.robot == robot) {
+            //came at owners with dirty dishes
+            element.status = 'Arrived back';
+            needUpdate = true;
+            cleaning = true;
+          } else {}
+
+          if (needUpdate) {
+            await _docRef
+                .collection('table' + table.toString())
+                .doc(tempId)
+                .update(tempOrder.toJson());
+          }
+        }
+      }
+    }
+    return cleaning;
+  }
+
+  Future<void> updateRobotArrivedWithCleaningAtOwner(
+      {required int robot}) async {
+    numOfTables = 3;
+    for (int table = 1; table < numOfTables + 1; table++) {
+      print(table.toString());
+      bool needUpdate = false;
+      bool skip = false;
+      var tempId = await _docRef
           .collection('table' + table.toString())
           .where('closed', isEqualTo: false)
           .limit(1)
           .get(
             GetOptions(source: Source.serverAndCache),
           )
-          .then((value) => value.docs.map((e) => e.data()));
-      // print(tempOrderJson.first);
-      var tempOrder = OrderModel.fromJson(tempOrderJson.first);
-      for (var element in tempOrder.items) {
-        if (element.status == 'Delivering' && element.robot == robot) {
-          element.status = 'Arrived';
-          needUpdate = true;
-          // print(tempOrder.toJson());
-        }
-        // if (element.status == 'Send back' && element.robot == robot) {
-        //   element.status = 'Arrived';
-        //   needUpdate = true;
-        //   // print(tempOrder.toJson());
-        // }
-      }
-
-      if (needUpdate) {
-        await _docRef
+          .then((value) => value.docs.first.id)
+          .catchError((error) {
+        skip = true;
+      });
+      if (!skip) {
+        var tempOrderJson = await _docRef
             .collection('table' + table.toString())
-            .doc(tempId)
-            .update(tempOrder.toJson());
+            .where('closed', isEqualTo: false)
+            // .limit(1)
+            .get(
+              GetOptions(source: Source.serverAndCache),
+            )
+            .then((value) => value.docs.map((e) => e.data()));
+        print('table: ' +
+            table.toString() +
+            ' ' +
+            tempOrderJson.first.toString());
+        var tempOrder = OrderModel.fromJson(tempOrderJson.first);
+        for (var element in tempOrder.items) {
+          if (element.status == 'Arrived back' && element.robot == robot) {
+            //came at customer with orders
+            element.status = 'Taken back';
+            element.robot = null;
+            needUpdate = true;
+            // print(tempOrder.toJson());
+          }
+        }
+
+        if (needUpdate) {
+          await _docRef
+              .collection('table' + table.toString())
+              .doc(tempId)
+              .update(tempOrder.toJson());
+        }
       }
     }
   }
